@@ -1,0 +1,13 @@
+<Project>
+
+  <!--
+    Shared MSBuild properties for every FinPlan.* project under src/backend.
+    The <Version> below is owned by release-please: on each backend release it
+    is rewritten via the generic updater (see release-please-config.json).
+    Do not edit the version by hand.
+  -->
+  <PropertyGroup>
+    <Version>0.1.0</Version> <!-- x-release-please-version -->
+  </PropertyGroup>
+
+</Project>
