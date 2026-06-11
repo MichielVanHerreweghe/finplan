@@ -1,4 +1,5 @@
 using FinPlan.Domain.Common;
+using FinPlan.Domain.SavingGoals;
 using FinPlan.Domain.Transactions;
 using FinPlan.Infrastructure.Database;
 using FinPlan.Infrastructure.Database.Repositories;
@@ -33,5 +34,6 @@ public static class InfrastructureModule
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<ITransactionCategoryRepository, TransactionCategoryRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
     }
 }

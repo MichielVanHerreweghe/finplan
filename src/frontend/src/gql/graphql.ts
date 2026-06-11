@@ -20,6 +20,35 @@ export type Scalars = {
   LocalDate: { input: string; output: string; }
 };
 
+export type AddContributionError = RequestError;
+
+export type AddContributionInput = {
+  amount: Scalars['Decimal']['input'];
+  date: Scalars['LocalDate']['input'];
+  savingGoalId: Scalars['Int']['input'];
+};
+
+export type AddContributionPayload = {
+  __typename?: 'AddContributionPayload';
+  boolean?: Maybe<Scalars['Boolean']['output']>;
+  errors?: Maybe<Array<AddContributionError>>;
+};
+
+export type CreateSavingGoalError = RequestError;
+
+export type CreateSavingGoalInput = {
+  deadline?: InputMaybe<Scalars['LocalDate']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  targetAmount: Scalars['Decimal']['input'];
+};
+
+export type CreateSavingGoalPayload = {
+  __typename?: 'CreateSavingGoalPayload';
+  errors?: Maybe<Array<CreateSavingGoalError>>;
+  id?: Maybe<Scalars['Int']['output']>;
+};
+
 export type CreateTransactionCategoryError = RequestError;
 
 export type CreateTransactionCategoryInput = {
@@ -46,6 +75,18 @@ export type CreateTransactionPayload = {
   __typename?: 'CreateTransactionPayload';
   errors?: Maybe<Array<CreateTransactionError>>;
   id?: Maybe<Scalars['Int']['output']>;
+};
+
+export type DeleteSavingGoalError = RequestError;
+
+export type DeleteSavingGoalInput = {
+  id: Scalars['Int']['input'];
+};
+
+export type DeleteSavingGoalPayload = {
+  __typename?: 'DeleteSavingGoalPayload';
+  boolean?: Maybe<Scalars['Boolean']['output']>;
+  errors?: Maybe<Array<DeleteSavingGoalError>>;
 };
 
 export type DeleteTransactionCategoryError = RequestError;
@@ -78,12 +119,27 @@ export type Error = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addContribution: AddContributionPayload;
+  createSavingGoal: CreateSavingGoalPayload;
   createTransaction: CreateTransactionPayload;
   createTransactionCategory: CreateTransactionCategoryPayload;
+  deleteSavingGoal: DeleteSavingGoalPayload;
   deleteTransaction: DeleteTransactionPayload;
   deleteTransactionCategory: DeleteTransactionCategoryPayload;
+  removeContribution: RemoveContributionPayload;
+  updateSavingGoal: UpdateSavingGoalPayload;
   updateTransaction: UpdateTransactionPayload;
   updateTransactionCategory: UpdateTransactionCategoryPayload;
+};
+
+
+export type MutationAddContributionArgs = {
+  input: AddContributionInput;
+};
+
+
+export type MutationCreateSavingGoalArgs = {
+  input: CreateSavingGoalInput;
 };
 
 
@@ -97,6 +153,11 @@ export type MutationCreateTransactionCategoryArgs = {
 };
 
 
+export type MutationDeleteSavingGoalArgs = {
+  input: DeleteSavingGoalInput;
+};
+
+
 export type MutationDeleteTransactionArgs = {
   input: DeleteTransactionInput;
 };
@@ -104,6 +165,16 @@ export type MutationDeleteTransactionArgs = {
 
 export type MutationDeleteTransactionCategoryArgs = {
   input: DeleteTransactionCategoryInput;
+};
+
+
+export type MutationRemoveContributionArgs = {
+  input: RemoveContributionInput;
+};
+
+
+export type MutationUpdateSavingGoalArgs = {
+  input: UpdateSavingGoalInput;
 };
 
 
@@ -118,10 +189,17 @@ export type MutationUpdateTransactionCategoryArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  savingGoal?: Maybe<SavingGoalResponse>;
+  savingGoals: Array<SavingGoalResponse>;
   transaction?: Maybe<TransactionResponse>;
   transactionCategories: Array<TransactionCategoryResponse>;
   transactionCategory?: Maybe<TransactionCategoryResponse>;
   transactions: Array<TransactionResponse>;
+};
+
+
+export type QuerySavingGoalArgs = {
+  id: Scalars['Int']['input'];
 };
 
 
@@ -134,9 +212,45 @@ export type QueryTransactionCategoryArgs = {
   id: Scalars['Int']['input'];
 };
 
+export type RemoveContributionError = RequestError;
+
+export type RemoveContributionInput = {
+  contributionId: Scalars['Int']['input'];
+  savingGoalId: Scalars['Int']['input'];
+};
+
+export type RemoveContributionPayload = {
+  __typename?: 'RemoveContributionPayload';
+  boolean?: Maybe<Scalars['Boolean']['output']>;
+  errors?: Maybe<Array<RemoveContributionError>>;
+};
+
 export type RequestError = Error & {
   __typename?: 'RequestError';
   message: Scalars['String']['output'];
+};
+
+export type SavingGoalContributionResponse = {
+  __typename?: 'SavingGoalContributionResponse';
+  amount: Scalars['Decimal']['output'];
+  date: Scalars['LocalDate']['output'];
+  id: Scalars['Int']['output'];
+};
+
+export type SavingGoalResponse = {
+  __typename?: 'SavingGoalResponse';
+  contributions: Array<SavingGoalContributionResponse>;
+  deadline?: Maybe<Scalars['LocalDate']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['Int']['output'];
+  isCompleted: Scalars['Boolean']['output'];
+  isOverdue: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  remainingAmount: Scalars['Decimal']['output'];
+  requiredMonthly?: Maybe<Scalars['Decimal']['output']>;
+  requiredWeekly?: Maybe<Scalars['Decimal']['output']>;
+  savedAmount: Scalars['Decimal']['output'];
+  targetAmount: Scalars['Decimal']['output'];
 };
 
 export type TransactionCategoryResponse = {
@@ -161,6 +275,22 @@ export type TransactionType =
   | 'EXPENSE'
   | 'INCOME'
   | 'UNDEFINED';
+
+export type UpdateSavingGoalError = RequestError;
+
+export type UpdateSavingGoalInput = {
+  deadline?: InputMaybe<Scalars['LocalDate']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['Int']['input'];
+  name: Scalars['String']['input'];
+  targetAmount: Scalars['Decimal']['input'];
+};
+
+export type UpdateSavingGoalPayload = {
+  __typename?: 'UpdateSavingGoalPayload';
+  boolean?: Maybe<Scalars['Boolean']['output']>;
+  errors?: Maybe<Array<UpdateSavingGoalError>>;
+};
 
 export type UpdateTransactionCategoryError = RequestError;
 
@@ -246,7 +376,50 @@ export type DeleteTransactionCategoryMutationVariables = Exact<{
 
 export type DeleteTransactionCategoryMutation = { __typename?: 'Mutation', deleteTransactionCategory: { __typename?: 'DeleteTransactionCategoryPayload', boolean?: boolean | null, errors?: Array<{ __typename?: 'RequestError', message: string }> | null } };
 
+export type SavingGoalFieldsFragment = { __typename?: 'SavingGoalResponse', id: number, name: string, description?: string | null, targetAmount: number, deadline?: string | null, savedAmount: number, remainingAmount: number, isCompleted: boolean, requiredMonthly?: number | null, requiredWeekly?: number | null, isOverdue: boolean, contributions: Array<{ __typename?: 'SavingGoalContributionResponse', id: number, amount: number, date: string }> };
+
+export type SavingGoalsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SavingGoalsQuery = { __typename?: 'Query', savingGoals: Array<{ __typename?: 'SavingGoalResponse', id: number, name: string, description?: string | null, targetAmount: number, deadline?: string | null, savedAmount: number, remainingAmount: number, isCompleted: boolean, requiredMonthly?: number | null, requiredWeekly?: number | null, isOverdue: boolean, contributions: Array<{ __typename?: 'SavingGoalContributionResponse', id: number, amount: number, date: string }> }> };
+
+export type CreateSavingGoalMutationVariables = Exact<{
+  input: CreateSavingGoalInput;
+}>;
+
+
+export type CreateSavingGoalMutation = { __typename?: 'Mutation', createSavingGoal: { __typename?: 'CreateSavingGoalPayload', id?: number | null, errors?: Array<{ __typename?: 'RequestError', message: string }> | null } };
+
+export type UpdateSavingGoalMutationVariables = Exact<{
+  input: UpdateSavingGoalInput;
+}>;
+
+
+export type UpdateSavingGoalMutation = { __typename?: 'Mutation', updateSavingGoal: { __typename?: 'UpdateSavingGoalPayload', boolean?: boolean | null, errors?: Array<{ __typename?: 'RequestError', message: string }> | null } };
+
+export type DeleteSavingGoalMutationVariables = Exact<{
+  input: DeleteSavingGoalInput;
+}>;
+
+
+export type DeleteSavingGoalMutation = { __typename?: 'Mutation', deleteSavingGoal: { __typename?: 'DeleteSavingGoalPayload', boolean?: boolean | null, errors?: Array<{ __typename?: 'RequestError', message: string }> | null } };
+
+export type AddContributionMutationVariables = Exact<{
+  input: AddContributionInput;
+}>;
+
+
+export type AddContributionMutation = { __typename?: 'Mutation', addContribution: { __typename?: 'AddContributionPayload', boolean?: boolean | null, errors?: Array<{ __typename?: 'RequestError', message: string }> | null } };
+
+export type RemoveContributionMutationVariables = Exact<{
+  input: RemoveContributionInput;
+}>;
+
+
+export type RemoveContributionMutation = { __typename?: 'Mutation', removeContribution: { __typename?: 'RemoveContributionPayload', boolean?: boolean | null, errors?: Array<{ __typename?: 'RequestError', message: string }> | null } };
+
 export const TransactionFieldsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"TransactionFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TransactionResponse"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"categoryId"}},{"kind":"Field","name":{"kind":"Name","value":"category"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<TransactionFieldsFragment, unknown>;
+export const SavingGoalFieldsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"SavingGoalFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SavingGoalResponse"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"targetAmount"}},{"kind":"Field","name":{"kind":"Name","value":"deadline"}},{"kind":"Field","name":{"kind":"Name","value":"savedAmount"}},{"kind":"Field","name":{"kind":"Name","value":"remainingAmount"}},{"kind":"Field","name":{"kind":"Name","value":"isCompleted"}},{"kind":"Field","name":{"kind":"Name","value":"requiredMonthly"}},{"kind":"Field","name":{"kind":"Name","value":"requiredWeekly"}},{"kind":"Field","name":{"kind":"Name","value":"isOverdue"}},{"kind":"Field","name":{"kind":"Name","value":"contributions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"date"}}]}}]}}]} as unknown as DocumentNode<SavingGoalFieldsFragment, unknown>;
 export const TransactionsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Transactions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"transactions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"TransactionFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"TransactionFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TransactionResponse"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"categoryId"}},{"kind":"Field","name":{"kind":"Name","value":"category"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<TransactionsQuery, TransactionsQueryVariables>;
 export const TransactionCategoriesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"TransactionCategories"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"transactionCategories"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<TransactionCategoriesQuery, TransactionCategoriesQueryVariables>;
 export const CreateTransactionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateTransaction"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateTransactionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createTransaction"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RequestError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<CreateTransactionMutation, CreateTransactionMutationVariables>;
@@ -255,3 +428,9 @@ export const DeleteTransactionDocument = {"kind":"Document","definitions":[{"kin
 export const CreateTransactionCategoryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateTransactionCategory"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateTransactionCategoryInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createTransactionCategory"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RequestError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<CreateTransactionCategoryMutation, CreateTransactionCategoryMutationVariables>;
 export const UpdateTransactionCategoryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateTransactionCategory"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateTransactionCategoryInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateTransactionCategory"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"boolean"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RequestError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<UpdateTransactionCategoryMutation, UpdateTransactionCategoryMutationVariables>;
 export const DeleteTransactionCategoryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteTransactionCategory"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeleteTransactionCategoryInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteTransactionCategory"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"boolean"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RequestError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<DeleteTransactionCategoryMutation, DeleteTransactionCategoryMutationVariables>;
+export const SavingGoalsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SavingGoals"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"savingGoals"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"SavingGoalFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"SavingGoalFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SavingGoalResponse"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"targetAmount"}},{"kind":"Field","name":{"kind":"Name","value":"deadline"}},{"kind":"Field","name":{"kind":"Name","value":"savedAmount"}},{"kind":"Field","name":{"kind":"Name","value":"remainingAmount"}},{"kind":"Field","name":{"kind":"Name","value":"isCompleted"}},{"kind":"Field","name":{"kind":"Name","value":"requiredMonthly"}},{"kind":"Field","name":{"kind":"Name","value":"requiredWeekly"}},{"kind":"Field","name":{"kind":"Name","value":"isOverdue"}},{"kind":"Field","name":{"kind":"Name","value":"contributions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"date"}}]}}]}}]} as unknown as DocumentNode<SavingGoalsQuery, SavingGoalsQueryVariables>;
+export const CreateSavingGoalDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateSavingGoal"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateSavingGoalInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createSavingGoal"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RequestError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<CreateSavingGoalMutation, CreateSavingGoalMutationVariables>;
+export const UpdateSavingGoalDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateSavingGoal"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateSavingGoalInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateSavingGoal"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"boolean"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RequestError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<UpdateSavingGoalMutation, UpdateSavingGoalMutationVariables>;
+export const DeleteSavingGoalDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteSavingGoal"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeleteSavingGoalInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteSavingGoal"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"boolean"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RequestError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<DeleteSavingGoalMutation, DeleteSavingGoalMutationVariables>;
+export const AddContributionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddContribution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"AddContributionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addContribution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"boolean"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RequestError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<AddContributionMutation, AddContributionMutationVariables>;
+export const RemoveContributionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RemoveContribution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RemoveContributionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"removeContribution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"boolean"}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RequestError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<RemoveContributionMutation, RemoveContributionMutationVariables>;

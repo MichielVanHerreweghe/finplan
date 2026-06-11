@@ -1,15 +1,23 @@
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
-import { ArrowLeftRight, LayoutDashboard, Tags, Wallet } from "lucide-react";
+import {
+  ArrowLeftRight,
+  LayoutDashboard,
+  PiggyBank,
+  Tags,
+  Wallet,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { TransactionsPage } from "@/features/transactions/TransactionsPage";
 import { CategoriesPage } from "@/features/categories/CategoriesPage";
+import { SavingGoalsPage } from "@/features/savingGoals/SavingGoalsPage";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { to: "/categories", label: "Categories", icon: Tags },
+  { to: "/saving-goals", label: "Saving Goals", icon: PiggyBank },
 ];
 
 export function App() {
@@ -48,6 +56,7 @@ export function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/transactions" element={<TransactionsPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/saving-goals" element={<SavingGoalsPage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </div>

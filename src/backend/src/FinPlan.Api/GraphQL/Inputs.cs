@@ -22,3 +22,20 @@ public sealed record UpdateTransactionInput(
 public sealed record CreateTransactionCategoryInput(string Name);
 
 public sealed record UpdateTransactionCategoryInput(int Id, string Name);
+
+public sealed record CreateSavingGoalInput(
+    string Name,
+    string? Description,
+    decimal TargetAmount,
+    DateOnly? Deadline);
+
+public sealed record UpdateSavingGoalInput(
+    int Id,
+    string Name,
+    string? Description,
+    decimal TargetAmount,
+    DateOnly? Deadline);
+
+public sealed record AddContributionInput(int SavingGoalId, decimal Amount, DateOnly Date);
+
+public sealed record RemoveContributionInput(int SavingGoalId, int ContributionId);
