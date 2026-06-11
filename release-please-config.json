@@ -30,6 +30,12 @@
           "path": "Directory.Build.props"
         }
       ]
+    },
+    "src/frontend": {
+      "release-type": "node",
+      "component": "frontend",
+      "package-name": "finplan-frontend",
+      "changelog-path": "CHANGELOG.md"
     }
   }
 }

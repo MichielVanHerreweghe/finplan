@@ -38,3 +38,9 @@ jobs:
         run: |
           echo "Backend released: ${{ steps.release.outputs['src/backend--tag_name'] }}"
           echo "Version: ${{ steps.release.outputs['src/backend--version'] }}"
+
+      - name: Frontend release summary
+        if: ${{ steps.release.outputs['src/frontend--release_created'] }}
+        run: |
+          echo "Frontend released: ${{ steps.release.outputs['src/frontend--tag_name'] }}"
+          echo "Version: ${{ steps.release.outputs['src/frontend--version'] }}"
