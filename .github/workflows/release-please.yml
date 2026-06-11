@@ -1,0 +1,40 @@
+name: release-please
+
+on:
+  push:
+    branches:
+      - main
+
+# Allow release-please to open/maintain the release PR and create tags + releases.
+permissions:
+  contents: write
+  pull-requests: write
+
+# Avoid two release-please runs racing on rapid merges to main.
+concurrency:
+  group: release-please-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          # GITHUB_TOKEN is enough to open the release PR and cut tags/releases.
+          # NOTE: releases created with GITHUB_TOKEN do NOT trigger other
+          # workflows (e.g. a Docker build on the tag). When you add a build
+          # pipeline that must fire on release, swap this for a PAT stored as
+          # secrets.RELEASE_PLEASE_TOKEN.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      # Example of how downstream jobs consume the per-component outputs.
+      # Output keys are prefixed by the package path: "src/backend--<name>".
+      - name: Backend release summary
+        if: ${{ steps.release.outputs['src/backend--release_created'] }}
+        run: |
+          echo "Backend released: ${{ steps.release.outputs['src/backend--tag_name'] }}"
+          echo "Version: ${{ steps.release.outputs['src/backend--version'] }}"
