@@ -112,3 +112,97 @@ export const DeleteCategoryMutation = graphql(`
     }
   }
 `);
+
+export const SavingGoalFields = graphql(`
+  fragment SavingGoalFields on SavingGoalResponse {
+    id
+    name
+    description
+    targetAmount
+    deadline
+    savedAmount
+    remainingAmount
+    isCompleted
+    requiredMonthly
+    requiredWeekly
+    isOverdue
+    contributions {
+      id
+      amount
+      date
+    }
+  }
+`);
+
+export const SavingGoalsQuery = graphql(`
+  query SavingGoals {
+    savingGoals {
+      ...SavingGoalFields
+    }
+  }
+`);
+
+export const CreateSavingGoalMutation = graphql(`
+  mutation CreateSavingGoal($input: CreateSavingGoalInput!) {
+    createSavingGoal(input: $input) {
+      id
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const UpdateSavingGoalMutation = graphql(`
+  mutation UpdateSavingGoal($input: UpdateSavingGoalInput!) {
+    updateSavingGoal(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const DeleteSavingGoalMutation = graphql(`
+  mutation DeleteSavingGoal($input: DeleteSavingGoalInput!) {
+    deleteSavingGoal(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const AddContributionMutation = graphql(`
+  mutation AddContribution($input: AddContributionInput!) {
+    addContribution(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const RemoveContributionMutation = graphql(`
+  mutation RemoveContribution($input: RemoveContributionInput!) {
+    removeContribution(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);

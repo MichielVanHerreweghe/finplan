@@ -23,6 +23,13 @@ type Documents = {
     "\n  mutation CreateTransactionCategory($input: CreateTransactionCategoryInput!) {\n    createTransactionCategory(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.CreateTransactionCategoryDocument,
     "\n  mutation UpdateTransactionCategory($input: UpdateTransactionCategoryInput!) {\n    updateTransactionCategory(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.UpdateTransactionCategoryDocument,
     "\n  mutation DeleteTransactionCategory($input: DeleteTransactionCategoryInput!) {\n    deleteTransactionCategory(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.DeleteTransactionCategoryDocument,
+    "\n  fragment SavingGoalFields on SavingGoalResponse {\n    id\n    name\n    description\n    targetAmount\n    deadline\n    savedAmount\n    remainingAmount\n    isCompleted\n    requiredMonthly\n    requiredWeekly\n    isOverdue\n    contributions {\n      id\n      amount\n      date\n    }\n  }\n": typeof types.SavingGoalFieldsFragmentDoc,
+    "\n  query SavingGoals {\n    savingGoals {\n      ...SavingGoalFields\n    }\n  }\n": typeof types.SavingGoalsDocument,
+    "\n  mutation CreateSavingGoal($input: CreateSavingGoalInput!) {\n    createSavingGoal(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.CreateSavingGoalDocument,
+    "\n  mutation UpdateSavingGoal($input: UpdateSavingGoalInput!) {\n    updateSavingGoal(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.UpdateSavingGoalDocument,
+    "\n  mutation DeleteSavingGoal($input: DeleteSavingGoalInput!) {\n    deleteSavingGoal(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.DeleteSavingGoalDocument,
+    "\n  mutation AddContribution($input: AddContributionInput!) {\n    addContribution(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.AddContributionDocument,
+    "\n  mutation RemoveContribution($input: RemoveContributionInput!) {\n    removeContribution(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.RemoveContributionDocument,
 };
 const documents: Documents = {
     "\n  fragment TransactionFields on TransactionResponse {\n    id\n    name\n    date\n    amount\n    type\n    categoryId\n    category {\n      id\n      name\n    }\n  }\n": types.TransactionFieldsFragmentDoc,
@@ -34,6 +41,13 @@ const documents: Documents = {
     "\n  mutation CreateTransactionCategory($input: CreateTransactionCategoryInput!) {\n    createTransactionCategory(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.CreateTransactionCategoryDocument,
     "\n  mutation UpdateTransactionCategory($input: UpdateTransactionCategoryInput!) {\n    updateTransactionCategory(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.UpdateTransactionCategoryDocument,
     "\n  mutation DeleteTransactionCategory($input: DeleteTransactionCategoryInput!) {\n    deleteTransactionCategory(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.DeleteTransactionCategoryDocument,
+    "\n  fragment SavingGoalFields on SavingGoalResponse {\n    id\n    name\n    description\n    targetAmount\n    deadline\n    savedAmount\n    remainingAmount\n    isCompleted\n    requiredMonthly\n    requiredWeekly\n    isOverdue\n    contributions {\n      id\n      amount\n      date\n    }\n  }\n": types.SavingGoalFieldsFragmentDoc,
+    "\n  query SavingGoals {\n    savingGoals {\n      ...SavingGoalFields\n    }\n  }\n": types.SavingGoalsDocument,
+    "\n  mutation CreateSavingGoal($input: CreateSavingGoalInput!) {\n    createSavingGoal(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.CreateSavingGoalDocument,
+    "\n  mutation UpdateSavingGoal($input: UpdateSavingGoalInput!) {\n    updateSavingGoal(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.UpdateSavingGoalDocument,
+    "\n  mutation DeleteSavingGoal($input: DeleteSavingGoalInput!) {\n    deleteSavingGoal(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.DeleteSavingGoalDocument,
+    "\n  mutation AddContribution($input: AddContributionInput!) {\n    addContribution(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.AddContributionDocument,
+    "\n  mutation RemoveContribution($input: RemoveContributionInput!) {\n    removeContribution(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.RemoveContributionDocument,
 };
 
 /**
@@ -86,6 +100,34 @@ export function graphql(source: "\n  mutation UpdateTransactionCategory($input: 
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteTransactionCategory($input: DeleteTransactionCategoryInput!) {\n    deleteTransactionCategory(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation DeleteTransactionCategory($input: DeleteTransactionCategoryInput!) {\n    deleteTransactionCategory(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment SavingGoalFields on SavingGoalResponse {\n    id\n    name\n    description\n    targetAmount\n    deadline\n    savedAmount\n    remainingAmount\n    isCompleted\n    requiredMonthly\n    requiredWeekly\n    isOverdue\n    contributions {\n      id\n      amount\n      date\n    }\n  }\n"): (typeof documents)["\n  fragment SavingGoalFields on SavingGoalResponse {\n    id\n    name\n    description\n    targetAmount\n    deadline\n    savedAmount\n    remainingAmount\n    isCompleted\n    requiredMonthly\n    requiredWeekly\n    isOverdue\n    contributions {\n      id\n      amount\n      date\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query SavingGoals {\n    savingGoals {\n      ...SavingGoalFields\n    }\n  }\n"): (typeof documents)["\n  query SavingGoals {\n    savingGoals {\n      ...SavingGoalFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateSavingGoal($input: CreateSavingGoalInput!) {\n    createSavingGoal(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreateSavingGoal($input: CreateSavingGoalInput!) {\n    createSavingGoal(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateSavingGoal($input: UpdateSavingGoalInput!) {\n    updateSavingGoal(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateSavingGoal($input: UpdateSavingGoalInput!) {\n    updateSavingGoal(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteSavingGoal($input: DeleteSavingGoalInput!) {\n    deleteSavingGoal(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation DeleteSavingGoal($input: DeleteSavingGoalInput!) {\n    deleteSavingGoal(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AddContribution($input: AddContributionInput!) {\n    addContribution(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation AddContribution($input: AddContributionInput!) {\n    addContribution(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RemoveContribution($input: RemoveContributionInput!) {\n    removeContribution(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation RemoveContribution($input: RemoveContributionInput!) {\n    removeContribution(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};
