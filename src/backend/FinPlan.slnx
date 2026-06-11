@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FinPlan.Api/FinPlan.Api.csproj" />
+    <Project Path="src/FinPlan.Application/FinPlan.Application.csproj" />
+    <Project Path="src/FinPlan.Domain/FinPlan.Domain.csproj" />
+    <Project Path="src/FinPlan.Host/FinPlan.Host.csproj" />
+    <Project Path="src/FinPlan.Infrastructure/FinPlan.Infrastructure.csproj" />
+  </Folder>
+</Solution>
