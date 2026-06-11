@@ -1,8 +1,14 @@
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
+// Pinned superuser password (read from the "postgres-password" parameter in user secrets).
+// Keeping it stable prevents the persistent data volume — which bakes in the password on first
+// init — from drifting out of sync with the value Aspire injects into the API.
+IResourceBuilder<ParameterResource> postgresPassword =
+    builder.AddParameter("postgres-password", secret: true);
+
 // PostgreSQL server with a persistent data volume and the pgAdmin management UI.
 IResourceBuilder<PostgresServerResource> postgres = builder
-    .AddPostgres("postgres")
+    .AddPostgres("postgres", password: postgresPassword)
     .WithDataVolume()
     .WithPgAdmin();
 
