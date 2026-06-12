@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,6 +14,8 @@ import { payloadErrorMessage } from "@/lib/graphql-error";
 import { todayIso } from "@/lib/format";
 import { useCategories } from "@/features/categories/useCategories";
 import { usePockets } from "@/features/pockets/usePockets";
+import { PocketFormDialog } from "@/features/pockets/PocketFormDialog";
+import { CategoryFormDialog } from "@/features/categories/CategoryFormDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +35,9 @@ import {
 } from "@/components/ui/dialog";
 
 const UNCATEGORIZED = "none";
+
+// Sentinel select value that opens an inline create dialog instead of selecting an option.
+const CREATE_NEW = "__create__";
 
 // Which pocket endpoints each type requires:
 //   INCOME -> to only, EXPENSE -> from only, TRANSFER -> both (distinct).
@@ -111,10 +116,17 @@ export function TransactionFormDialog({
   onSaved,
 }: TransactionFormDialogProps) {
   const isEdit = transaction !== undefined;
-  const { categories } = useCategories();
-  const { pockets } = usePockets();
+  const { categories, refetch: refetchCategories } = useCategories();
+  const { pockets, refetch: refetchPockets } = usePockets();
   const [, createTransaction] = useMutation(CreateTransactionMutation);
   const [, updateTransaction] = useMutation(UpdateTransactionMutation);
+
+  // Inline "create new" dialogs launched from the selects. The pocket dialog tracks which
+  // field (source/destination) opened it so the new pocket lands in the right one.
+  const [pocketDialogFor, setPocketDialogFor] = useState<
+    "fromPocketId" | "toPocketId" | null
+  >(null);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
 
   const {
     register,
@@ -315,7 +327,14 @@ export function TransactionFormDialog({
                     control={control}
                     name="fromPocketId"
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) =>
+                          value === CREATE_NEW
+                            ? setPocketDialogFor("fromPocketId")
+                            : field.onChange(value)
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a pocket" />
                         </SelectTrigger>
@@ -325,6 +344,9 @@ export function TransactionFormDialog({
                               {pocket.name}
                             </SelectItem>
                           ))}
+                          <SelectItem value={CREATE_NEW} className="text-primary">
+                            + Create new pocket…
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -343,7 +365,14 @@ export function TransactionFormDialog({
                     control={control}
                     name="toPocketId"
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) =>
+                          value === CREATE_NEW
+                            ? setPocketDialogFor("toPocketId")
+                            : field.onChange(value)
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a pocket" />
                         </SelectTrigger>
@@ -353,6 +382,9 @@ export function TransactionFormDialog({
                               {pocket.name}
                             </SelectItem>
                           ))}
+                          <SelectItem value={CREATE_NEW} className="text-primary">
+                            + Create new pocket…
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -374,7 +406,14 @@ export function TransactionFormDialog({
                 control={control}
                 name="categoryId"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) =>
+                      value === CREATE_NEW
+                        ? setCategoryDialogOpen(true)
+                        : field.onChange(value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -385,6 +424,9 @@ export function TransactionFormDialog({
                           {category.name}
                         </SelectItem>
                       ))}
+                      <SelectItem value={CREATE_NEW} className="text-primary">
+                        + Create new category…
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 )}
@@ -405,6 +447,38 @@ export function TransactionFormDialog({
             </Button>
           </DialogFooter>
         </form>
+
+        {/* Inline "create new" dialogs; they portal out, so nesting here is fine.
+            On save we refresh the list and auto-select the freshly created item. */}
+        <PocketFormDialog
+          open={pocketDialogFor !== null}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setPocketDialogFor(null);
+          }}
+          pockets={pockets}
+          onSaved={(createdId) => {
+            refetchPockets();
+            if (createdId != null && pocketDialogFor) {
+              setValue(pocketDialogFor, String(createdId), {
+                shouldValidate: true,
+              });
+            }
+            setPocketDialogFor(null);
+          }}
+        />
+        <CategoryFormDialog
+          open={categoryDialogOpen}
+          onOpenChange={setCategoryDialogOpen}
+          onSaved={(createdId) => {
+            refetchCategories();
+            if (createdId != null) {
+              setValue("categoryId", String(createdId), {
+                shouldValidate: true,
+              });
+            }
+            setCategoryDialogOpen(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

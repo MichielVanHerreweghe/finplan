@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinPlan.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260611132150_AddPockets")]
-    partial class AddPockets
+    [Migration("20260612084533_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -46,8 +46,15 @@ namespace FinPlan.Infrastructure.Database.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("ParentPocketId")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("StartingAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .IsConcurrencyToken()
@@ -83,6 +90,9 @@ namespace FinPlan.Infrastructure.Database.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("PocketId")
                         .HasColumnType("integer");
 
@@ -96,9 +106,7 @@ namespace FinPlan.Infrastructure.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PocketId")
-                        .IsUnique()
-                        .HasFilter("\"DeletedAt\" IS NULL");
+                    b.HasIndex("PocketId");
 
                     b.ToTable("SavingGoal", "finplan");
                 });
@@ -132,6 +140,12 @@ namespace FinPlan.Infrastructure.Database.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SavingGoalId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("ToPocketId")
                         .HasColumnType("integer");
 
@@ -147,6 +161,8 @@ namespace FinPlan.Infrastructure.Database.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("FromPocketId");
+
+                    b.HasIndex("SavingGoalId");
 
                     b.HasIndex("ToPocketId");
 
@@ -169,17 +185,62 @@ namespace FinPlan.Infrastructure.Database.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("UpdatedAt")
                         .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
+                    b.HasIndex("OwnerId", "Name")
                         .IsUnique()
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("TransactionCategory", "finplan");
+                });
+
+            modelBuilder.Entity("FinPlan.Domain.Users.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("ExternalSubject")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Issuer")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Issuer", "ExternalSubject")
+                        .IsUnique()
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
+                    b.ToTable("User", "finplan");
                 });
 
             modelBuilder.Entity("FinPlan.Domain.Pockets.Pocket", b =>
@@ -204,6 +265,11 @@ namespace FinPlan.Infrastructure.Database.Migrations
                     b.HasOne("FinPlan.Domain.Pockets.Pocket", null)
                         .WithMany()
                         .HasForeignKey("FromPocketId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FinPlan.Domain.SavingGoals.SavingGoal", null)
+                        .WithMany()
+                        .HasForeignKey("SavingGoalId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("FinPlan.Domain.Pockets.Pocket", null)

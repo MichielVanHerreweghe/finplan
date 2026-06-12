@@ -3,7 +3,7 @@ using FluentResults;
 
 namespace FinPlan.Domain.Transactions;
 
-public sealed class TransactionCategory : Entity, IAggregateRoot
+public sealed class TransactionCategory : OwnedEntity, IAggregateRoot
 {
     public string Name { get; private set; }
 

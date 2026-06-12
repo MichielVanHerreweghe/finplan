@@ -3,7 +3,7 @@ using FluentResults;
 
 namespace FinPlan.Domain.Transactions;
 
-public sealed class Transaction : Entity, IAggregateRoot
+public sealed class Transaction : OwnedEntity, IAggregateRoot
 {
     public string Name { get; private set; }
     public DateOnly Date { get; private set; }

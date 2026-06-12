@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,6 +12,7 @@ import {
 import type { SavingGoalFieldsFragment } from "@/gql/graphql";
 import { payloadErrorMessage } from "@/lib/graphql-error";
 import { usePockets } from "@/features/pockets/usePockets";
+import { PocketFormDialog } from "@/features/pockets/PocketFormDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,9 @@ const schema = z.object({
 
 type FormValues = z.input<typeof schema>;
 
+// Sentinel select value that opens the inline create-pocket dialog instead of selecting one.
+const CREATE_NEW = "__create__";
+
 interface SavingGoalFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -56,15 +60,19 @@ export function SavingGoalFormDialog({
   onSaved,
 }: SavingGoalFormDialogProps) {
   const isEdit = savingGoal !== undefined;
-  const { pockets } = usePockets();
+  const { pockets, refetch: refetchPockets } = usePockets();
   const [, createSavingGoal] = useMutation(CreateSavingGoalMutation);
   const [, updateSavingGoal] = useMutation(UpdateSavingGoalMutation);
+
+  // Inline create-pocket dialog launched from the pocket select.
+  const [pocketDialogOpen, setPocketDialogOpen] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -177,7 +185,14 @@ export function SavingGoalFormDialog({
               control={control}
               name="pocketId"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={(value) =>
+                    value === CREATE_NEW
+                      ? setPocketDialogOpen(true)
+                      : field.onChange(value)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a pocket" />
                   </SelectTrigger>
@@ -187,6 +202,9 @@ export function SavingGoalFormDialog({
                         {pocket.name}
                       </SelectItem>
                     ))}
+                    <SelectItem value={CREATE_NEW} className="text-primary">
+                      + Create new pocket…
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -214,6 +232,21 @@ export function SavingGoalFormDialog({
             </Button>
           </DialogFooter>
         </form>
+
+        {/* Inline create-pocket dialog; it portals out, so nesting here is fine.
+            On save we refresh the list and auto-select the new pocket. */}
+        <PocketFormDialog
+          open={pocketDialogOpen}
+          onOpenChange={setPocketDialogOpen}
+          pockets={pockets}
+          onSaved={(createdId) => {
+            refetchPockets();
+            if (createdId != null) {
+              setValue("pocketId", String(createdId), { shouldValidate: true });
+            }
+            setPocketDialogOpen(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

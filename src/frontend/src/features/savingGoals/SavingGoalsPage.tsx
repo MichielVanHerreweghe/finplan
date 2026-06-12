@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useClient, useMutation, useQuery } from "urql";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -16,12 +16,57 @@ import { usePockets } from "@/features/pockets/usePockets";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   TransactionFormDialog,
   type TransactionPreset,
 } from "@/features/transactions/TransactionFormDialog";
 import { SavingGoalFormDialog } from "./SavingGoalFormDialog";
+
+type SortKey = "name" | "deadline" | "progress" | "target" | "remaining";
+
+const sortOptions: { value: SortKey; label: string }[] = [
+  { value: "name", label: "Name (A–Z)" },
+  { value: "deadline", label: "Deadline (soonest)" },
+  { value: "progress", label: "Progress (most)" },
+  { value: "target", label: "Target (largest)" },
+  { value: "remaining", label: "Remaining (least)" },
+];
+
+const fractionDone = (goal: SavingGoalFieldsFragment) =>
+  goal.targetAmount > 0 ? goal.savedAmount / goal.targetAmount : 0;
+
+function sortGoals(
+  goals: readonly SavingGoalFieldsFragment[],
+  key: SortKey,
+): SavingGoalFieldsFragment[] {
+  const sorted = [...goals];
+  switch (key) {
+    case "name":
+      return sorted.sort((a, b) => a.name.localeCompare(b.name));
+    case "deadline":
+      // Soonest first; goals without a deadline sink to the bottom (ISO dates compare lexically).
+      return sorted.sort((a, b) => {
+        if (a.deadline && b.deadline) return a.deadline.localeCompare(b.deadline);
+        if (a.deadline) return -1;
+        if (b.deadline) return 1;
+        return a.name.localeCompare(b.name);
+      });
+    case "progress":
+      return sorted.sort((a, b) => fractionDone(b) - fractionDone(a));
+    case "target":
+      return sorted.sort((a, b) => b.targetAmount - a.targetAmount);
+    case "remaining":
+      return sorted.sort((a, b) => a.remainingAmount - b.remainingAmount);
+  }
+}
 
 export function SavingGoalsPage() {
   const [{ data, fetching, error }, reexecute] = useQuery({
@@ -42,6 +87,7 @@ export function SavingGoalsPage() {
     pockets.find((pocket) => pocket.id === id)?.name;
 
   const [tab, setTab] = useState<"active" | "completed">("active");
+  const [sort, setSort] = useState<SortKey>("name");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SavingGoalFieldsFragment | undefined>();
   const [deleting, setDeleting] = useState<SavingGoalFieldsFragment | undefined>();
@@ -80,6 +126,10 @@ export function SavingGoalsPage() {
   }
 
   const visibleGoals = tab === "active" ? activeGoals : completedGoals;
+  const sortedGoals = useMemo(
+    () => sortGoals(visibleGoals, sort),
+    [visibleGoals, sort],
+  );
 
   function openCreate() {
     setEditing(undefined);
@@ -134,31 +184,52 @@ export function SavingGoalsPage() {
 
       {!fetching && !error && savingGoals.length > 0 && (
         <>
-          <div className="inline-flex gap-1 rounded-lg border bg-secondary/50 p-1">
-            {(
-              [
-                { key: "active", label: "Active", count: activeGoals.length },
-                {
-                  key: "completed",
-                  label: "Completed",
-                  count: completedGoals.length,
-                },
-              ] as const
-            ).map(({ key, label, count }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setTab(key)}
-                className={cn(
-                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                  tab === key
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="inline-flex gap-1 rounded-lg border bg-secondary/50 p-1">
+              {(
+                [
+                  { key: "active", label: "Active", count: activeGoals.length },
+                  {
+                    key: "completed",
+                    label: "Completed",
+                    count: completedGoals.length,
+                  },
+                ] as const
+              ).map(({ key, label, count }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setTab(key)}
+                  className={cn(
+                    "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                    tab === key
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {label} ({count})
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Sort by</span>
+              <Select
+                value={sort}
+                onValueChange={(value) => setSort(value as SortKey)}
               >
-                {label} ({count})
-              </button>
-            ))}
+                <SelectTrigger className="w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {visibleGoals.length === 0 && (
@@ -172,7 +243,7 @@ export function SavingGoalsPage() {
       )}
 
       <div className="space-y-4">
-        {visibleGoals.map((goal) => {
+        {sortedGoals.map((goal) => {
           const progress =
             goal.targetAmount > 0
               ? Math.min(100, (goal.savedAmount / goal.targetAmount) * 100)
