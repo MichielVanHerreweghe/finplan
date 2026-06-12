@@ -56,10 +56,15 @@ export function DashboardPage() {
   const buckets = useMemo(() => periodBuckets(unit, anchor), [unit, anchor]);
 
   // Scope to the selected period, then apply the type/category filters.
+  // Transfers are internal pocket-to-pocket moves, not income or spending, so they
+  // are excluded from the income/spending overview entirely.
   const scoped = useMemo(
     () =>
       applyFilters(transactions, filters).filter(
-        (tx) => tx.date >= range.start && tx.date <= range.end,
+        (tx) =>
+          tx.type !== "TRANSFER" &&
+          tx.date >= range.start &&
+          tx.date <= range.end,
       ),
     [transactions, filters, range],
   );

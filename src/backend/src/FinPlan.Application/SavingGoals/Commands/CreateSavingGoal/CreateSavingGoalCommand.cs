@@ -7,4 +7,5 @@ public sealed record CreateSavingGoalCommand(
     string Name,
     string? Description,
     decimal TargetAmount,
-    DateOnly? Deadline) : ICommand<Result<int>>;
+    DateOnly? Deadline,
+    int PocketId) : ICommand<Result<int>>;

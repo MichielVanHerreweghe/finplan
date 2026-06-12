@@ -10,13 +10,6 @@ internal sealed class SavingGoalRepository
     {
     }
 
-    public async Task<IReadOnlyList<SavingGoal>> GetWithContributionsAsync(CancellationToken ct = default) =>
-        await Set
-            .Include(goal => goal.Contributions)
-            .ToListAsync(ct);
-
-    public Task<SavingGoal?> GetByIdWithContributionsAsync(int id, CancellationToken ct = default) =>
-        Set
-            .Include(goal => goal.Contributions)
-            .FirstOrDefaultAsync(goal => goal.Id == id, ct);
+    public Task<bool> ExistsForPocketAsync(int pocketId, CancellationToken ct = default) =>
+        Set.AnyAsync(goal => goal.PocketId == pocketId, ct);
 }

@@ -8,26 +8,23 @@ public sealed record SavingGoalResponse(
     string? Description,
     decimal TargetAmount,
     DateOnly? Deadline,
+    int PocketId,
     decimal SavedAmount,
     decimal RemainingAmount,
     bool IsCompleted,
     decimal? RequiredMonthly,
     decimal? RequiredWeekly,
-    bool IsOverdue,
-    IReadOnlyList<SavingGoalContributionResponse> Contributions);
-
-public sealed record SavingGoalContributionResponse(int Id, decimal Amount, DateOnly Date);
+    bool IsOverdue);
 
 internal static class SavingGoalMapping
 {
-    public static SavingGoalResponse ToResponse(this SavingGoal goal, DateOnly today)
+    // Progress is the linked pocket's balance (savedAmount), supplied by the query handler.
+    public static SavingGoalResponse ToResponse(this SavingGoal goal, DateOnly today, decimal savedAmount)
     {
-        SavingsContributionPlan? plan = goal.RequiredContributions(today);
+        SavingsContributionPlan? plan = goal.RequiredContributions(today, savedAmount);
 
-        IReadOnlyList<SavingGoalContributionResponse> contributions = goal.Contributions
-            .Select(contribution => new SavingGoalContributionResponse(
-                contribution.Id, contribution.Amount, contribution.Date))
-            .ToList();
+        decimal remaining = Math.Max(0, goal.TargetAmount - savedAmount);
+        bool isCompleted = savedAmount >= goal.TargetAmount;
 
         return new SavingGoalResponse(
             goal.Id,
@@ -35,12 +32,12 @@ internal static class SavingGoalMapping
             goal.Description,
             goal.TargetAmount,
             goal.Deadline,
-            goal.SavedAmount,
-            goal.RemainingAmount,
-            goal.IsCompleted,
+            goal.PocketId,
+            savedAmount,
+            remaining,
+            isCompleted,
             plan?.PerMonth,
             plan?.PerWeek,
-            plan?.IsOverdue ?? false,
-            contributions);
+            plan?.IsOverdue ?? false);
     }
 }

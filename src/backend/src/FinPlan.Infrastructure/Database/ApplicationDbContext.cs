@@ -1,5 +1,6 @@
 using System.Reflection;
 using FinPlan.Domain.Common;
+using FinPlan.Domain.Pockets;
 using FinPlan.Domain.SavingGoals;
 using FinPlan.Domain.Transactions;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ public sealed class ApplicationDbContext : DbContext, IUnitOfWork
     public DbSet<TransactionCategory> TransactionCategories => Set<TransactionCategory>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
+    public DbSet<Pocket> Pockets => Set<Pocket>();
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 

@@ -1,6 +1,6 @@
+using FinPlan.Domain.Pockets;
 using FinPlan.Domain.SavingGoals;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FinPlan.Infrastructure.Database.Configurations.SavingGoals;
@@ -11,18 +11,12 @@ internal sealed class SavingGoalConfiguration : EntityConfiguration<SavingGoal>
     {
         base.Configure(builder);
 
-        // Computed from the contributions collection; never stored.
-        builder.Ignore(x => x.SavedAmount);
-        builder.Ignore(x => x.RemainingAmount);
-        builder.Ignore(x => x.IsCompleted);
+        // A pocket can back any number of goals; index (non-unique) for FK lookups.
+        builder.HasIndex(x => x.PocketId);
 
-        builder.HasMany(x => x.Contributions)
-            .WithOne()
-            .HasForeignKey(contribution => contribution.SavingGoalId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // The collection is exposed read-only and backed by a private list.
-        builder.Navigation(x => x.Contributions)
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.HasOne<Pocket>()
+            .WithMany()
+            .HasForeignKey(x => x.PocketId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -15,14 +15,16 @@ public partial class Mutation
     public async Task<int> CreateTransaction(
         CreateTransactionInput input, ISender sender, CancellationToken ct) =>
         (await sender.Send(
-            new CreateTransactionCommand(input.Name, input.Date, input.Amount, input.Type, input.CategoryId),
+            new CreateTransactionCommand(input.Name, input.Date, input.Amount, input.Type, input.CategoryId,
+                input.FromPocketId, input.ToPocketId, input.SavingGoalId),
             ct)).Unwrap();
 
     [Error<RequestException>]
     public async Task<bool> UpdateTransaction(
         UpdateTransactionInput input, ISender sender, CancellationToken ct) =>
         (await sender.Send(
-            new UpdateTransactionCommand(input.Id, input.Name, input.Date, input.Amount, input.Type, input.CategoryId),
+            new UpdateTransactionCommand(input.Id, input.Name, input.Date, input.Amount, input.Type, input.CategoryId,
+                input.FromPocketId, input.ToPocketId, input.SavingGoalId),
             ct)).Unwrap();
 
     [Error<RequestException>]

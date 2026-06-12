@@ -8,7 +8,10 @@ public sealed record TransactionResponse(
     DateOnly Date,
     decimal Amount,
     TransactionType Type,
-    int? CategoryId);
+    int? CategoryId,
+    int? FromPocketId,
+    int? ToPocketId,
+    int? SavingGoalId);
 
 internal static class TransactionMapping
 {
@@ -18,5 +21,8 @@ internal static class TransactionMapping
             transaction.Date,
             transaction.Amount,
             transaction.Type,
-            transaction.CategoryId);
+            transaction.CategoryId,
+            transaction.FromPocketId,
+            transaction.ToPocketId,
+            transaction.SavingGoalId);
 }

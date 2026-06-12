@@ -9,5 +9,6 @@ public sealed class UpdateSavingGoalValidator : AbstractValidator<UpdateSavingGo
         RuleFor(command => command.Id).GreaterThan(0);
         RuleFor(command => command.Name).NotEmpty();
         RuleFor(command => command.TargetAmount).GreaterThan(0);
+        RuleFor(command => command.PocketId).GreaterThan(0);
     }
 }

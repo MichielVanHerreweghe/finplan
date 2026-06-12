@@ -10,4 +10,7 @@ public sealed record UpdateTransactionCommand(
     DateOnly Date,
     decimal Amount,
     TransactionType Type,
-    int? CategoryId) : ICommand;
+    int? CategoryId,
+    int? FromPocketId,
+    int? ToPocketId,
+    int? SavingGoalId) : ICommand;

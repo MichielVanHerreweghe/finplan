@@ -23,6 +23,44 @@ namespace FinPlan.Infrastructure.Database.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("FinPlan.Domain.Pockets.Pocket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int?>("ParentPocketId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("StartingAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentPocketId");
+
+                    b.ToTable("Pocket", "finplan");
+                });
+
             modelBuilder.Entity("FinPlan.Domain.SavingGoals.SavingGoal", b =>
                 {
                     b.Property<int>("Id")
@@ -46,6 +84,9 @@ namespace FinPlan.Infrastructure.Database.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<int>("PocketId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("TargetAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -56,39 +97,9 @@ namespace FinPlan.Infrastructure.Database.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PocketId");
+
                     b.ToTable("SavingGoal", "finplan");
-                });
-
-            modelBuilder.Entity("FinPlan.Domain.SavingGoals.SavingGoalContribution", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("SavingGoalId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .IsConcurrencyToken()
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SavingGoalId");
-
-                    b.ToTable("SavingGoalContribution", "finplan");
                 });
 
             modelBuilder.Entity("FinPlan.Domain.Transactions.Transaction", b =>
@@ -112,10 +123,19 @@ namespace FinPlan.Infrastructure.Database.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("FromPocketId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<int?>("SavingGoalId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ToPocketId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -127,6 +147,12 @@ namespace FinPlan.Infrastructure.Database.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("FromPocketId");
+
+                    b.HasIndex("SavingGoalId");
+
+                    b.HasIndex("ToPocketId");
 
                     b.ToTable("Transaction", "finplan");
                 });
@@ -160,18 +186,39 @@ namespace FinPlan.Infrastructure.Database.Migrations
                     b.ToTable("TransactionCategory", "finplan");
                 });
 
-            modelBuilder.Entity("FinPlan.Domain.SavingGoals.SavingGoalContribution", b =>
+            modelBuilder.Entity("FinPlan.Domain.Pockets.Pocket", b =>
                 {
-                    b.HasOne("FinPlan.Domain.SavingGoals.SavingGoal", null)
-                        .WithMany("Contributions")
-                        .HasForeignKey("SavingGoalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("FinPlan.Domain.Pockets.Pocket", null)
+                        .WithMany()
+                        .HasForeignKey("ParentPocketId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("FinPlan.Domain.SavingGoals.SavingGoal", b =>
                 {
-                    b.Navigation("Contributions");
+                    b.HasOne("FinPlan.Domain.Pockets.Pocket", null)
+                        .WithMany()
+                        .HasForeignKey("PocketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FinPlan.Domain.Transactions.Transaction", b =>
+                {
+                    b.HasOne("FinPlan.Domain.Pockets.Pocket", null)
+                        .WithMany()
+                        .HasForeignKey("FromPocketId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FinPlan.Domain.SavingGoals.SavingGoal", null)
+                        .WithMany()
+                        .HasForeignKey("SavingGoalId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FinPlan.Domain.Pockets.Pocket", null)
+                        .WithMany()
+                        .HasForeignKey("ToPocketId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 #pragma warning restore 612, 618
         }

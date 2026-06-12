@@ -15,5 +15,14 @@ public sealed class CreateTransactionValidator : AbstractValidator<CreateTransac
         RuleFor(command => command.CategoryId)
             .GreaterThan(0)
             .When(command => command.CategoryId.HasValue);
+        RuleFor(command => command.FromPocketId)
+            .GreaterThan(0)
+            .When(command => command.FromPocketId.HasValue);
+        RuleFor(command => command.ToPocketId)
+            .GreaterThan(0)
+            .When(command => command.ToPocketId.HasValue);
+        RuleFor(command => command.SavingGoalId)
+            .GreaterThan(0)
+            .When(command => command.SavingGoalId.HasValue);
     }
 }

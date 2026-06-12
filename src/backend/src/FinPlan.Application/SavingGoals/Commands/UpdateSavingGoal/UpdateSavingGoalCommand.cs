@@ -7,4 +7,5 @@ public sealed record UpdateSavingGoalCommand(
     string Name,
     string? Description,
     decimal TargetAmount,
-    DateOnly? Deadline) : ICommand;
+    DateOnly? Deadline,
+    int PocketId) : ICommand;
