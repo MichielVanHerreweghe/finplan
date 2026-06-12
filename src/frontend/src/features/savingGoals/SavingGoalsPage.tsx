@@ -1,23 +1,27 @@
 import { useCallback, useState } from "react";
-import { useMutation, useQuery } from "urql";
+import { useClient, useMutation, useQuery } from "urql";
 import { toast } from "sonner";
-import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import {
   DeleteSavingGoalMutation,
-  RemoveContributionMutation,
   SavingGoalsQuery,
+  TransactionsBySavingGoalQuery,
 } from "@/graphql/operations";
 import type { SavingGoalFieldsFragment } from "@/gql/graphql";
 import { payloadErrorMessage, combinedErrorMessage } from "@/lib/graphql-error";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { usePockets } from "@/features/pockets/usePockets";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import {
+  TransactionFormDialog,
+  type TransactionPreset,
+} from "@/features/transactions/TransactionFormDialog";
 import { SavingGoalFormDialog } from "./SavingGoalFormDialog";
-import { ContributionDialog } from "./ContributionDialog";
 
 export function SavingGoalsPage() {
   const [{ data, fetching, error }, reexecute] = useQuery({
@@ -27,20 +31,53 @@ export function SavingGoalsPage() {
     () => reexecute({ requestPolicy: "network-only" }),
     [reexecute],
   );
+  const { pockets } = usePockets();
+  const client = useClient();
   const [, deleteSavingGoal] = useMutation(DeleteSavingGoalMutation);
-  const [, removeContribution] = useMutation(RemoveContributionMutation);
 
   const savingGoals = data?.savingGoals ?? [];
   const activeGoals = savingGoals.filter((goal) => !goal.isCompleted);
   const completedGoals = savingGoals.filter((goal) => goal.isCompleted);
+  const pocketName = (id: number) =>
+    pockets.find((pocket) => pocket.id === id)?.name;
 
   const [tab, setTab] = useState<"active" | "completed">("active");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SavingGoalFieldsFragment | undefined>();
-  const [funding, setFunding] = useState<SavingGoalFieldsFragment | undefined>();
   const [deleting, setDeleting] = useState<SavingGoalFieldsFragment | undefined>();
   const [deletePending, setDeletePending] = useState(false);
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [fundingPreset, setFundingPreset] = useState<TransactionPreset | undefined>();
+
+  // Fund a goal = a transfer into its linked pocket, tagged to this goal so siblings
+  // sharing the pocket stay independent. Auto-named "[Goal] - [n+1]" where n is how
+  // many transactions are already tagged to this goal.
+  async function openFunding(goal: SavingGoalFieldsFragment) {
+    const result = await client
+      .query(TransactionsBySavingGoalQuery, { savingGoalId: goal.id })
+      .toPromise();
+    const count = result.data?.transactionsBySavingGoal.length ?? 0;
+
+    // Offer the goal's required pace (when it has a deadline) as one-tap amounts.
+    const quickAmounts: { label: string; value: number }[] = [];
+    if (goal.requiredMonthly != null)
+      quickAmounts.push({
+        label: `Monthly ${formatCurrency(goal.requiredMonthly)}`,
+        value: goal.requiredMonthly,
+      });
+    if (goal.requiredWeekly != null)
+      quickAmounts.push({
+        label: `Weekly ${formatCurrency(goal.requiredWeekly)}`,
+        value: goal.requiredWeekly,
+      });
+
+    setFundingPreset({
+      type: "TRANSFER",
+      toPocketId: goal.pocketId,
+      savingGoalId: goal.id,
+      name: `${goal.name} - ${count + 1}`,
+      quickAmounts: quickAmounts.length ? quickAmounts : undefined,
+    });
+  }
 
   const visibleGoals = tab === "active" ? activeGoals : completedGoals;
 
@@ -52,15 +89,6 @@ export function SavingGoalsPage() {
   function openEdit(goal: SavingGoalFieldsFragment) {
     setEditing(goal);
     setFormOpen(true);
-  }
-
-  function toggleExpanded(id: number) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
   }
 
   async function confirmDelete() {
@@ -76,24 +104,13 @@ export function SavingGoalsPage() {
     refetch();
   }
 
-  async function handleRemoveContribution(goalId: number, contributionId: number) {
-    const result = await removeContribution({
-      input: { savingGoalId: goalId, contributionId },
-    });
-    if (result.error) return toast.error(result.error.message);
-    const msg = payloadErrorMessage(result.data?.removeContribution.errors);
-    if (msg) return toast.error(msg);
-    toast.success("Contribution removed");
-    refetch();
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Saving Goals</h1>
           <p className="text-sm text-muted-foreground">
-            Set targets and track money you put aside towards them.
+            Set a target on a pocket and track progress towards it.
           </p>
         </div>
         <Button onClick={openCreate}>
@@ -160,7 +177,7 @@ export function SavingGoalsPage() {
             goal.targetAmount > 0
               ? Math.min(100, (goal.savedAmount / goal.targetAmount) * 100)
               : 0;
-          const isOpen = expanded.has(goal.id);
+          const linkedPocket = pocketName(goal.pocketId);
 
           return (
             <Card key={goal.id}>
@@ -181,16 +198,25 @@ export function SavingGoalsPage() {
                         {goal.description}
                       </p>
                     )}
+                    {linkedPocket && (
+                      <p className="text-xs text-muted-foreground">
+                        Funded by{" "}
+                        <span className="font-medium text-foreground">
+                          {linkedPocket}
+                        </span>
+                      </p>
+                    )}
                   </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setFunding(goal)}
-                      disabled={goal.isCompleted}
-                    >
-                      Add funds
-                    </Button>
+                  <div className="flex items-center gap-1">
+                    {!goal.isCompleted && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openFunding(goal)}
+                      >
+                        Add funds
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -256,59 +282,6 @@ export function SavingGoalsPage() {
                     )}
                   </p>
                 )}
-
-                {goal.contributions.length > 0 && (
-                  <div className="border-t pt-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleExpanded(goal.id)}
-                      className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                    >
-                      {isOpen ? (
-                        <ChevronDown className="size-4" />
-                      ) : (
-                        <ChevronRight className="size-4" />
-                      )}
-                      {goal.contributions.length}{" "}
-                      {goal.contributions.length === 1
-                        ? "contribution"
-                        : "contributions"}
-                    </button>
-                    {isOpen && (
-                      <ul className="mt-2 space-y-1">
-                        {goal.contributions.map((contribution) => (
-                          <li
-                            key={contribution.id}
-                            className="flex items-center justify-between text-sm"
-                          >
-                            <span className="text-muted-foreground">
-                              {formatDate(contribution.date)}
-                            </span>
-                            <span className="flex items-center gap-2">
-                              <span className="font-medium">
-                                {formatCurrency(contribution.amount)}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-7"
-                                onClick={() =>
-                                  handleRemoveContribution(
-                                    goal.id,
-                                    contribution.id,
-                                  )
-                                }
-                                aria-label="Remove contribution"
-                              >
-                                <Trash2 className="text-destructive" />
-                              </Button>
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
               </CardContent>
             </Card>
           );
@@ -322,18 +295,21 @@ export function SavingGoalsPage() {
         onSaved={refetch}
       />
 
-      <ContributionDialog
-        open={funding !== undefined}
-        onOpenChange={(open) => !open && setFunding(undefined)}
-        savingGoal={funding}
-        onSaved={refetch}
+      <TransactionFormDialog
+        open={fundingPreset !== undefined}
+        onOpenChange={(open) => !open && setFundingPreset(undefined)}
+        preset={fundingPreset}
+        onSaved={() => {
+          setFundingPreset(undefined);
+          refetch();
+        }}
       />
 
       <ConfirmDialog
         open={deleting !== undefined}
         onOpenChange={(open) => !open && setDeleting(undefined)}
         title="Delete saving goal?"
-        description={`"${deleting?.name}" and its contributions will be permanently removed.`}
+        description={`"${deleting?.name}" will be permanently removed. The linked pocket and its money are kept.`}
         onConfirm={confirmDelete}
         pending={deletePending}
       />

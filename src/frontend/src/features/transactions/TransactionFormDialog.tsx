@@ -13,6 +13,7 @@ import type { TransactionFieldsFragment } from "@/gql/graphql";
 import { payloadErrorMessage } from "@/lib/graphql-error";
 import { todayIso } from "@/lib/format";
 import { useCategories } from "@/features/categories/useCategories";
+import { usePockets } from "@/features/pockets/usePockets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,21 +34,72 @@ import {
 
 const UNCATEGORIZED = "none";
 
-const schema = z.object({
-  name: z.string().trim().min(1, "Name is required"),
-  date: z.string().min(1, "Date is required"),
-  amount: z.coerce.number().positive("Amount must be greater than 0"),
-  type: z.enum(["INCOME", "EXPENSE"]),
-  // Select value: "none" or the category id as a string.
-  categoryId: z.string(),
-});
+// Which pocket endpoints each type requires:
+//   INCOME -> to only, EXPENSE -> from only, TRANSFER -> both (distinct).
+const schema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required"),
+    date: z.string().min(1, "Date is required"),
+    amount: z.coerce.number().positive("Amount must be greater than 0"),
+    type: z.enum(["INCOME", "EXPENSE", "TRANSFER"]),
+    // "none" or the category id as a string.
+    categoryId: z.string(),
+    // "" when not selected, or the pocket id as a string.
+    fromPocketId: z.string(),
+    toPocketId: z.string(),
+  })
+  .superRefine((values, ctx) => {
+    const needsFrom = values.type === "EXPENSE" || values.type === "TRANSFER";
+    const needsTo = values.type === "INCOME" || values.type === "TRANSFER";
+
+    if (needsFrom && !values.fromPocketId) {
+      ctx.addIssue({
+        path: ["fromPocketId"],
+        code: z.ZodIssueCode.custom,
+        message: "Source pocket is required",
+      });
+    }
+    if (needsTo && !values.toPocketId) {
+      ctx.addIssue({
+        path: ["toPocketId"],
+        code: z.ZodIssueCode.custom,
+        message: "Destination pocket is required",
+      });
+    }
+    if (
+      values.type === "TRANSFER" &&
+      values.fromPocketId &&
+      values.fromPocketId === values.toPocketId
+    ) {
+      ctx.addIssue({
+        path: ["toPocketId"],
+        code: z.ZodIssueCode.custom,
+        message: "Must differ from the source",
+      });
+    }
+  });
 
 type FormValues = z.input<typeof schema>;
+
+type TransactionTypeValue = "INCOME" | "EXPENSE" | "TRANSFER";
+
+export interface TransactionPreset {
+  type?: TransactionTypeValue;
+  fromPocketId?: number;
+  toPocketId?: number;
+  name?: string;
+  /** Tags the created transaction as a contribution to this saving goal. */
+  savingGoalId?: number;
+  /** One-tap amounts shown above the amount field (e.g. a goal's monthly/weekly target). */
+  quickAmounts?: { label: string; value: number }[];
+}
 
 interface TransactionFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transaction?: TransactionFieldsFragment;
+  /** Prefills a new transaction (e.g. opened from a pocket or saving goal). Ignored when editing. */
+  preset?: TransactionPreset;
   onSaved: () => void;
 }
 
@@ -55,10 +107,12 @@ export function TransactionFormDialog({
   open,
   onOpenChange,
   transaction,
+  preset,
   onSaved,
 }: TransactionFormDialogProps) {
   const isEdit = transaction !== undefined;
   const { categories } = useCategories();
+  const { pockets } = usePockets();
   const [, createTransaction] = useMutation(CreateTransactionMutation);
   const [, updateTransaction] = useMutation(UpdateTransactionMutation);
 
@@ -67,6 +121,8 @@ export function TransactionFormDialog({
     handleSubmit,
     reset,
     control,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -76,32 +132,79 @@ export function TransactionFormDialog({
       amount: 0,
       type: "EXPENSE",
       categoryId: UNCATEGORIZED,
+      fromPocketId: "",
+      toPocketId: "",
     },
   });
+
+  const type = watch("type");
+  const showFrom = type === "EXPENSE" || type === "TRANSFER";
+  const showTo = type === "INCOME" || type === "TRANSFER";
+  const showCategory = type !== "TRANSFER";
 
   useEffect(() => {
     if (!open) return;
     reset({
-      name: transaction?.name ?? "",
+      name: transaction?.name ?? preset?.name ?? "",
       date: transaction?.date ?? todayIso(),
       amount: transaction?.amount ?? 0,
-      type: transaction?.type === "INCOME" ? "INCOME" : "EXPENSE",
+      type: transaction
+        ? transaction.type === "INCOME" || transaction.type === "TRANSFER"
+          ? transaction.type
+          : "EXPENSE"
+        : (preset?.type ?? "EXPENSE"),
       categoryId:
         transaction?.categoryId != null
           ? String(transaction.categoryId)
           : UNCATEGORIZED,
+      fromPocketId:
+        transaction?.fromPocketId != null
+          ? String(transaction.fromPocketId)
+          : preset?.fromPocketId != null
+            ? String(preset.fromPocketId)
+            : "",
+      toPocketId:
+        transaction?.toPocketId != null
+          ? String(transaction.toPocketId)
+          : preset?.toPocketId != null
+            ? String(preset.toPocketId)
+            : "",
     });
-  }, [open, transaction, reset]);
+  }, [
+    open,
+    transaction,
+    preset?.type,
+    preset?.fromPocketId,
+    preset?.toPocketId,
+    preset?.name,
+    reset,
+  ]);
 
   async function onSubmit(values: FormValues) {
     const parsed = schema.parse(values);
+    const isTransfer = parsed.type === "TRANSFER";
     const input = {
       name: parsed.name,
       date: parsed.date,
       amount: parsed.amount,
       type: parsed.type,
+      // Transfers are internal moves, never categorized.
       categoryId:
-        parsed.categoryId === UNCATEGORIZED ? null : Number(parsed.categoryId),
+        isTransfer || parsed.categoryId === UNCATEGORIZED
+          ? null
+          : Number(parsed.categoryId),
+      fromPocketId:
+        parsed.type === "EXPENSE" || isTransfer
+          ? Number(parsed.fromPocketId)
+          : null,
+      toPocketId:
+        parsed.type === "INCOME" || isTransfer
+          ? Number(parsed.toPocketId)
+          : null,
+      // Preserve an existing goal tag on edit; apply the preset's tag on create.
+      savingGoalId: transaction
+        ? (transaction.savingGoalId ?? null)
+        : (preset?.savingGoalId ?? null),
     };
 
     if (isEdit) {
@@ -163,25 +266,108 @@ export function TransactionFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Type</Label>
-              <Controller
-                control={control}
-                name="type"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="INCOME">Income</SelectItem>
-                      <SelectItem value="EXPENSE">Expense</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+          {preset?.quickAmounts?.length ? (
+            <div className="flex flex-wrap gap-2">
+              {preset.quickAmounts.map((quick) => (
+                <Button
+                  key={quick.label}
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() =>
+                    setValue("amount", quick.value, { shouldValidate: true })
+                  }
+                >
+                  {quick.label}
+                </Button>
+              ))}
             </div>
+          ) : null}
+
+          <div className="space-y-2">
+            <Label>Type</Label>
+            <Controller
+              control={control}
+              name="type"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="INCOME">Income</SelectItem>
+                    <SelectItem value="EXPENSE">Expense</SelectItem>
+                    <SelectItem value="TRANSFER">Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+
+          {(showFrom || showTo) && (
+            <div
+              className={showFrom && showTo ? "grid grid-cols-2 gap-4" : undefined}
+            >
+              {showFrom && (
+                <div className="space-y-2">
+                  <Label>From pocket</Label>
+                  <Controller
+                    control={control}
+                    name="fromPocketId"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a pocket" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {pockets.map((pocket) => (
+                            <SelectItem key={pocket.id} value={String(pocket.id)}>
+                              {pocket.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.fromPocketId && (
+                    <p className="text-sm text-destructive">
+                      {errors.fromPocketId.message}
+                    </p>
+                  )}
+                </div>
+              )}
+              {showTo && (
+                <div className="space-y-2">
+                  <Label>To pocket</Label>
+                  <Controller
+                    control={control}
+                    name="toPocketId"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a pocket" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {pockets.map((pocket) => (
+                            <SelectItem key={pocket.id} value={String(pocket.id)}>
+                              {pocket.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.toPocketId && (
+                    <p className="text-sm text-destructive">
+                      {errors.toPocketId.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {showCategory && (
             <div className="space-y-2">
               <Label>Category</Label>
               <Controller
@@ -204,7 +390,7 @@ export function TransactionFormDialog({
                 )}
               />
             </div>
-          </div>
+          )}
 
           <DialogFooter>
             <Button

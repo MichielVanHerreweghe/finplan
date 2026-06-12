@@ -9,7 +9,10 @@ public sealed record CreateTransactionInput(
     DateOnly Date,
     decimal Amount,
     TransactionType Type,
-    int? CategoryId);
+    int? CategoryId,
+    int? FromPocketId,
+    int? ToPocketId,
+    int? SavingGoalId);
 
 public sealed record UpdateTransactionInput(
     int Id,
@@ -17,7 +20,10 @@ public sealed record UpdateTransactionInput(
     DateOnly Date,
     decimal Amount,
     TransactionType Type,
-    int? CategoryId);
+    int? CategoryId,
+    int? FromPocketId,
+    int? ToPocketId,
+    int? SavingGoalId);
 
 public sealed record CreateTransactionCategoryInput(string Name);
 
@@ -27,15 +33,26 @@ public sealed record CreateSavingGoalInput(
     string Name,
     string? Description,
     decimal TargetAmount,
-    DateOnly? Deadline);
+    DateOnly? Deadline,
+    int PocketId);
 
 public sealed record UpdateSavingGoalInput(
     int Id,
     string Name,
     string? Description,
     decimal TargetAmount,
-    DateOnly? Deadline);
+    DateOnly? Deadline,
+    int PocketId);
 
-public sealed record AddContributionInput(int SavingGoalId, decimal Amount, DateOnly Date);
+public sealed record CreatePocketInput(
+    string Name,
+    string? Description,
+    int? ParentPocketId,
+    decimal StartingAmount);
 
-public sealed record RemoveContributionInput(int SavingGoalId, int ContributionId);
+public sealed record UpdatePocketInput(
+    int Id,
+    string Name,
+    string? Description,
+    int? ParentPocketId,
+    decimal StartingAmount);

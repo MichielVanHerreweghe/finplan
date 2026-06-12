@@ -10,6 +10,7 @@ import {
 import type { TransactionFieldsFragment } from "@/gql/graphql";
 import { payloadErrorMessage, combinedErrorMessage } from "@/lib/graphql-error";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { usePockets } from "@/features/pockets/usePockets";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -23,6 +24,8 @@ import {
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { TransactionFormDialog } from "./TransactionFormDialog";
 
+const COLUMN_COUNT = 7;
+
 export function TransactionsPage() {
   const [{ data, fetching, error }, reexecute] = useQuery({
     query: TransactionsQuery,
@@ -31,9 +34,12 @@ export function TransactionsPage() {
     () => reexecute({ requestPolicy: "network-only" }),
     [reexecute],
   );
+  const { pockets } = usePockets();
   const [, deleteTransaction] = useMutation(DeleteTransactionMutation);
 
   const transactions = data?.transactions ?? [];
+  const pocketName = (id: number) =>
+    pockets.find((pocket) => pocket.id === id)?.name ?? "?";
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TransactionFieldsFragment | undefined>();
@@ -48,6 +54,14 @@ export function TransactionsPage() {
   function openEdit(transaction: TransactionFieldsFragment) {
     setEditing(transaction);
     setFormOpen(true);
+  }
+
+  function movement(tx: TransactionFieldsFragment) {
+    const from = tx.fromPocketId != null ? pocketName(tx.fromPocketId) : null;
+    const to = tx.toPocketId != null ? pocketName(tx.toPocketId) : null;
+    if (tx.type === "TRANSFER") return `${from} → ${to}`;
+    if (tx.type === "INCOME") return `→ ${to ?? "—"}`;
+    return `${from ?? "—"} →`;
   }
 
   async function confirmDelete() {
@@ -69,7 +83,7 @@ export function TransactionsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Transactions</h1>
           <p className="text-sm text-muted-foreground">
-            Track your income and expenses.
+            Track income, expenses, and transfers between pockets.
           </p>
         </div>
         <Button onClick={openCreate}>
@@ -84,6 +98,7 @@ export function TransactionsPage() {
               <TableHead>Name</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Type</TableHead>
+              <TableHead>Pocket</TableHead>
               <TableHead>Category</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead className="w-24 text-right">Actions</TableHead>
@@ -92,21 +107,21 @@ export function TransactionsPage() {
           <TableBody>
             {fetching && (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={COLUMN_COUNT} className="py-8 text-center text-muted-foreground">
                   Loading…
                 </TableCell>
               </TableRow>
             )}
             {error && !fetching && (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-destructive">
+                <TableCell colSpan={COLUMN_COUNT} className="py-8 text-center text-destructive">
                   {combinedErrorMessage(error)}
                 </TableCell>
               </TableRow>
             )}
             {!fetching && !error && transactions.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={COLUMN_COUNT} className="py-8 text-center text-muted-foreground">
                   No transactions yet.
                 </TableCell>
               </TableRow>
@@ -116,9 +131,24 @@ export function TransactionsPage() {
                 <TableCell className="font-medium">{tx.name}</TableCell>
                 <TableCell>{formatDate(tx.date)}</TableCell>
                 <TableCell>
-                  <Badge variant={tx.type === "INCOME" ? "success" : "warning"}>
-                    {tx.type === "INCOME" ? "Income" : "Expense"}
+                  <Badge
+                    variant={
+                      tx.type === "INCOME"
+                        ? "success"
+                        : tx.type === "EXPENSE"
+                          ? "warning"
+                          : "secondary"
+                    }
+                  >
+                    {tx.type === "INCOME"
+                      ? "Income"
+                      : tx.type === "EXPENSE"
+                        ? "Expense"
+                        : "Transfer"}
                   </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {movement(tx)}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {tx.category?.name ?? "—"}
@@ -130,7 +160,7 @@ export function TransactionsPage() {
                       : "text-right font-medium"
                   }
                 >
-                  {tx.type === "INCOME" ? "+" : "-"}
+                  {tx.type === "INCOME" ? "+" : tx.type === "EXPENSE" ? "-" : ""}
                   {formatCurrency(tx.amount)}
                 </TableCell>
                 <TableCell className="text-right">

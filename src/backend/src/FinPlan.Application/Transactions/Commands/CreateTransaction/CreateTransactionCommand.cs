@@ -9,4 +9,7 @@ public sealed record CreateTransactionCommand(
     DateOnly Date,
     decimal Amount,
     TransactionType Type,
-    int? CategoryId) : ICommand<Result<int>>;
+    int? CategoryId,
+    int? FromPocketId,
+    int? ToPocketId,
+    int? SavingGoalId) : ICommand<Result<int>>;

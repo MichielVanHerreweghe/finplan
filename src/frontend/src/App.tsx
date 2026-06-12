@@ -5,6 +5,7 @@ import {
   PiggyBank,
   Tags,
   Wallet,
+  Wallet2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -12,10 +13,13 @@ import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { TransactionsPage } from "@/features/transactions/TransactionsPage";
 import { CategoriesPage } from "@/features/categories/CategoriesPage";
 import { SavingGoalsPage } from "@/features/savingGoals/SavingGoalsPage";
+import { PocketsPage } from "@/features/pockets/PocketsPage";
+import { PocketDetailPage } from "@/features/pockets/PocketDetailPage";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/transactions", label: "Transactions", icon: ArrowLeftRight },
+  { to: "/pockets", label: "Pockets", icon: Wallet2 },
   { to: "/categories", label: "Categories", icon: Tags },
   { to: "/saving-goals", label: "Saving Goals", icon: PiggyBank },
 ];
@@ -55,6 +59,8 @@ export function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/pockets" element={<PocketsPage />} />
+            <Route path="/pockets/:id" element={<PocketDetailPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/saving-goals" element={<SavingGoalsPage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

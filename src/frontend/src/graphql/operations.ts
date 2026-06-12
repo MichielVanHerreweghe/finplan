@@ -11,6 +11,9 @@ export const TransactionFields = graphql(`
     amount
     type
     categoryId
+    fromPocketId
+    toPocketId
+    savingGoalId
     category {
       id
       name
@@ -21,6 +24,22 @@ export const TransactionFields = graphql(`
 export const TransactionsQuery = graphql(`
   query Transactions {
     transactions {
+      ...TransactionFields
+    }
+  }
+`);
+
+export const TransactionsByPocketQuery = graphql(`
+  query TransactionsByPocket($pocketId: Int!) {
+    transactionsByPocket(pocketId: $pocketId) {
+      ...TransactionFields
+    }
+  }
+`);
+
+export const TransactionsBySavingGoalQuery = graphql(`
+  query TransactionsBySavingGoal($savingGoalId: Int!) {
+    transactionsBySavingGoal(savingGoalId: $savingGoalId) {
       ...TransactionFields
     }
   }
@@ -120,17 +139,13 @@ export const SavingGoalFields = graphql(`
     description
     targetAmount
     deadline
+    pocketId
     savedAmount
     remainingAmount
     isCompleted
     requiredMonthly
     requiredWeekly
     isOverdue
-    contributions {
-      id
-      amount
-      date
-    }
   }
 `);
 
@@ -181,9 +196,41 @@ export const DeleteSavingGoalMutation = graphql(`
   }
 `);
 
-export const AddContributionMutation = graphql(`
-  mutation AddContribution($input: AddContributionInput!) {
-    addContribution(input: $input) {
+export const PocketFields = graphql(`
+  fragment PocketFields on PocketResponse {
+    id
+    name
+    description
+    parentPocketId
+    startingAmount
+    balance
+  }
+`);
+
+export const PocketsQuery = graphql(`
+  query Pockets {
+    pockets {
+      ...PocketFields
+    }
+  }
+`);
+
+export const CreatePocketMutation = graphql(`
+  mutation CreatePocket($input: CreatePocketInput!) {
+    createPocket(input: $input) {
+      id
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const UpdatePocketMutation = graphql(`
+  mutation UpdatePocket($input: UpdatePocketInput!) {
+    updatePocket(input: $input) {
       boolean
       errors {
         ... on RequestError {
@@ -194,9 +241,9 @@ export const AddContributionMutation = graphql(`
   }
 `);
 
-export const RemoveContributionMutation = graphql(`
-  mutation RemoveContribution($input: RemoveContributionInput!) {
-    removeContribution(input: $input) {
+export const DeletePocketMutation = graphql(`
+  mutation DeletePocket($input: DeletePocketInput!) {
+    deletePocket(input: $input) {
       boolean
       errors {
         ... on RequestError {

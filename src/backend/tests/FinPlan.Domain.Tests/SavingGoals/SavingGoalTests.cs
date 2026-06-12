@@ -6,9 +6,9 @@ namespace FinPlan.Domain.Tests.SavingGoals;
 
 public class SavingGoalTests
 {
-    private static SavingGoal NewGoal(decimal target = 900m, DateOnly? deadline = null)
+    private static SavingGoal NewGoal(decimal target = 900m, DateOnly? deadline = null, int pocketId = 1)
     {
-        Result<SavingGoal> result = SavingGoal.Create("Holiday", "Trip to Italy", target, deadline);
+        Result<SavingGoal> result = SavingGoal.Create("Holiday", "Trip to Italy", target, deadline, pocketId);
         Assert.True(result.IsSuccess);
         return result.Value;
     }
@@ -16,7 +16,7 @@ public class SavingGoalTests
     [Fact]
     public void Create_WithEmptyName_Fails()
     {
-        Result<SavingGoal> result = SavingGoal.Create("  ", null, 100m, null);
+        Result<SavingGoal> result = SavingGoal.Create("  ", null, 100m, null, 1);
 
         Assert.True(result.IsFailed);
     }
@@ -24,33 +24,17 @@ public class SavingGoalTests
     [Fact]
     public void Create_WithNonPositiveTarget_Fails()
     {
-        Result<SavingGoal> result = SavingGoal.Create("Car", null, 0m, null);
+        Result<SavingGoal> result = SavingGoal.Create("Car", null, 0m, null, 1);
 
         Assert.True(result.IsFailed);
     }
 
     [Fact]
-    public void AddContribution_WithNonPositiveAmount_Fails()
+    public void Create_WithoutPocket_Fails()
     {
-        SavingGoal goal = NewGoal();
-
-        Result result = goal.AddContribution(0m, new DateOnly(2026, 1, 1));
+        Result<SavingGoal> result = SavingGoal.Create("Car", null, 100m, null, 0);
 
         Assert.True(result.IsFailed);
-        Assert.Empty(goal.Contributions);
-    }
-
-    [Fact]
-    public void SavedAndRemaining_SumContributions()
-    {
-        SavingGoal goal = NewGoal(target: 1000m);
-
-        goal.AddContribution(200m, new DateOnly(2026, 1, 1));
-        goal.AddContribution(300m, new DateOnly(2026, 2, 1));
-
-        Assert.Equal(500m, goal.SavedAmount);
-        Assert.Equal(500m, goal.RemainingAmount);
-        Assert.False(goal.IsCompleted);
     }
 
     [Fact]
@@ -58,7 +42,7 @@ public class SavingGoalTests
     {
         SavingGoal goal = NewGoal(deadline: null);
 
-        Assert.Null(goal.RequiredContributions(new DateOnly(2026, 1, 1)));
+        Assert.Null(goal.RequiredContributions(new DateOnly(2026, 1, 1), savedAmount: 0m));
     }
 
     [Fact]
@@ -67,7 +51,7 @@ public class SavingGoalTests
         // 900 target, nothing saved, 90 days until the deadline (Jan 1 -> Apr 1).
         SavingGoal goal = NewGoal(target: 900m, deadline: new DateOnly(2026, 4, 1));
 
-        SavingsContributionPlan? plan = goal.RequiredContributions(new DateOnly(2026, 1, 1));
+        SavingsContributionPlan? plan = goal.RequiredContributions(new DateOnly(2026, 1, 1), savedAmount: 0m);
 
         Assert.NotNull(plan);
         Assert.False(plan!.IsOverdue);
@@ -78,18 +62,28 @@ public class SavingGoalTests
     }
 
     [Fact]
+    public void RequiredContributions_UsesSavedAmountFromPocket()
+    {
+        // 900 target, 600 already in the linked pocket, 90 days -> 3 months -> 300 / 3 = 100.00
+        SavingGoal goal = NewGoal(target: 900m, deadline: new DateOnly(2026, 4, 1));
+
+        SavingsContributionPlan? plan = goal.RequiredContributions(new DateOnly(2026, 1, 1), savedAmount: 600m);
+
+        Assert.NotNull(plan);
+        Assert.Equal(100m, plan!.PerMonth);
+    }
+
+    [Fact]
     public void RequiredContributions_WhenCompleted_ReturnsZero()
     {
         SavingGoal goal = NewGoal(target: 100m, deadline: new DateOnly(2026, 12, 1));
-        goal.AddContribution(100m, new DateOnly(2026, 1, 1));
 
-        SavingsContributionPlan? plan = goal.RequiredContributions(new DateOnly(2026, 1, 1));
+        SavingsContributionPlan? plan = goal.RequiredContributions(new DateOnly(2026, 1, 1), savedAmount: 100m);
 
         Assert.NotNull(plan);
         Assert.Equal(0m, plan!.PerMonth);
         Assert.Equal(0m, plan.PerWeek);
         Assert.False(plan.IsOverdue);
-        Assert.True(goal.IsCompleted);
     }
 
     [Fact]
@@ -97,7 +91,7 @@ public class SavingGoalTests
     {
         SavingGoal goal = NewGoal(target: 500m, deadline: new DateOnly(2026, 1, 1));
 
-        SavingsContributionPlan? plan = goal.RequiredContributions(new DateOnly(2026, 6, 1));
+        SavingsContributionPlan? plan = goal.RequiredContributions(new DateOnly(2026, 6, 1), savedAmount: 0m);
 
         Assert.NotNull(plan);
         Assert.True(plan!.IsOverdue);
@@ -111,7 +105,7 @@ public class SavingGoalTests
         DateOnly today = new(2026, 6, 1);
         SavingGoal goal = NewGoal(target: 500m, deadline: today);
 
-        SavingsContributionPlan? plan = goal.RequiredContributions(today);
+        SavingsContributionPlan? plan = goal.RequiredContributions(today, savedAmount: 0m);
 
         Assert.NotNull(plan);
         Assert.False(plan!.IsOverdue);

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "urql";
@@ -11,9 +11,17 @@ import {
 } from "@/graphql/operations";
 import type { SavingGoalFieldsFragment } from "@/gql/graphql";
 import { payloadErrorMessage } from "@/lib/graphql-error";
+import { usePockets } from "@/features/pockets/usePockets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +36,8 @@ const schema = z.object({
   targetAmount: z.coerce.number().positive("Target must be greater than 0"),
   // Empty string means "no deadline".
   deadline: z.string(),
+  // The pocket whose balance tracks this goal's progress. Required.
+  pocketId: z.string().min(1, "Pick a pocket"),
 });
 
 type FormValues = z.input<typeof schema>;
@@ -46,6 +56,7 @@ export function SavingGoalFormDialog({
   onSaved,
 }: SavingGoalFormDialogProps) {
   const isEdit = savingGoal !== undefined;
+  const { pockets } = usePockets();
   const [, createSavingGoal] = useMutation(CreateSavingGoalMutation);
   const [, updateSavingGoal] = useMutation(UpdateSavingGoalMutation);
 
@@ -53,6 +64,7 @@ export function SavingGoalFormDialog({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -61,6 +73,7 @@ export function SavingGoalFormDialog({
       description: "",
       targetAmount: 0,
       deadline: "",
+      pocketId: "",
     },
   });
 
@@ -71,6 +84,7 @@ export function SavingGoalFormDialog({
       description: savingGoal?.description ?? "",
       targetAmount: savingGoal?.targetAmount ?? 0,
       deadline: savingGoal?.deadline ?? "",
+      pocketId: savingGoal?.pocketId != null ? String(savingGoal.pocketId) : "",
     });
   }, [open, savingGoal, reset]);
 
@@ -81,6 +95,7 @@ export function SavingGoalFormDialog({
       description: parsed.description?.length ? parsed.description : null,
       targetAmount: parsed.targetAmount,
       deadline: parsed.deadline.length ? parsed.deadline : null,
+      pocketId: Number(parsed.pocketId),
     };
 
     if (isEdit) {
@@ -154,6 +169,36 @@ export function SavingGoalFormDialog({
               <Input id="sg-deadline" type="date" {...register("deadline")} />
               <p className="text-xs text-muted-foreground">Optional</p>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Pocket</Label>
+            <Controller
+              control={control}
+              name="pocketId"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a pocket" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pockets.map((pocket) => (
+                      <SelectItem key={pocket.id} value={String(pocket.id)}>
+                        {pocket.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            <p className="text-xs text-muted-foreground">
+              Progress is tracked from this pocket's balance.
+            </p>
+            {errors.pocketId && (
+              <p className="text-sm text-destructive">
+                {errors.pocketId.message}
+              </p>
+            )}
           </div>
 
           <DialogFooter>

@@ -2,11 +2,9 @@ using FinPlan.Domain.Common;
 
 namespace FinPlan.Domain.SavingGoals;
 
+// A pocket can back any number of goals; this only reports whether any exist,
+// so deleting a pocket that still has goals attached can be blocked.
 public interface ISavingGoalRepository : IRepository<SavingGoal>
 {
-    // The base repository does not eager-load navigations; these include the
-    // contributions needed to compute saved/remaining amounts and the savings plan.
-    public Task<IReadOnlyList<SavingGoal>> GetWithContributionsAsync(CancellationToken ct = default);
-
-    public Task<SavingGoal?> GetByIdWithContributionsAsync(int id, CancellationToken ct = default);
+    public Task<bool> ExistsForPocketAsync(int pocketId, CancellationToken ct = default);
 }
