@@ -49,7 +49,8 @@ interface PocketFormDialogProps {
   pocket?: PocketFieldsFragment;
   /** All pockets, used to offer valid parents (top-level only, excluding self). */
   pockets: PocketFieldsFragment[];
-  onSaved: () => void;
+  /** Receives the new pocket's id on create (undefined on edit) so callers can auto-select it. */
+  onSaved: (createdId?: number) => void;
 }
 
 export function PocketFormDialog({
@@ -111,6 +112,7 @@ export function PocketFormDialog({
       startingAmount: parsed.startingAmount,
     };
 
+    let createdId: number | undefined;
     if (isEdit) {
       const result = await updatePocket({ input: { id: pocket.id, ...input } });
       if (result.error) return toast.error(result.error.message);
@@ -122,10 +124,11 @@ export function PocketFormDialog({
       if (result.error) return toast.error(result.error.message);
       const msg = payloadErrorMessage(result.data?.createPocket.errors);
       if (msg) return toast.error(msg);
+      createdId = result.data?.createPocket.id ?? undefined;
       toast.success("Pocket created");
     }
     onOpenChange(false);
-    onSaved();
+    onSaved(createdId);
   }
 
   return (

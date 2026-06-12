@@ -36,7 +36,8 @@ interface CategoryFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   category?: CategoryListItem;
-  onSaved: () => void;
+  /** Receives the new category's id on create (undefined on edit) so callers can auto-select it. */
+  onSaved: (createdId?: number) => void;
 }
 
 export function CategoryFormDialog({
@@ -65,6 +66,7 @@ export function CategoryFormDialog({
   }, [open, category, reset]);
 
   async function onSubmit(values: FormValues) {
+    let createdId: number | undefined;
     if (isEdit) {
       const result = await updateCategory({
         input: { id: category.id, name: values.name },
@@ -82,10 +84,11 @@ export function CategoryFormDialog({
         result.data?.createTransactionCategory.errors,
       );
       if (msg) return toast.error(msg);
+      createdId = result.data?.createTransactionCategory.id ?? undefined;
       toast.success("Category created");
     }
     onOpenChange(false);
-    onSaved();
+    onSaved(createdId);
   }
 
   return (

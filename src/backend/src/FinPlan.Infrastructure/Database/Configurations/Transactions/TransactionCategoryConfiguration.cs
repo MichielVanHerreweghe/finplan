@@ -10,7 +10,8 @@ internal sealed class TransactionCategoryConfiguration : EntityConfiguration<Tra
     {
         base.Configure(builder);
 
-        builder.HasIndex(x => x.Name)
+        // Scoped to the owner so two users can each have a "Groceries" category.
+        builder.HasIndex(x => new { x.OwnerId, x.Name })
             .IsUnique()
             .HasFilter("\"DeletedAt\" IS NULL");
     }

@@ -3,7 +3,7 @@ using FluentResults;
 
 namespace FinPlan.Domain.SavingGoals;
 
-public sealed class SavingGoal : Entity, IAggregateRoot
+public sealed class SavingGoal : OwnedEntity, IAggregateRoot
 {
     // Average days per month (365.25 / 12); used to translate a deadline into whole months.
     private const double DaysPerMonth = 30.436875;

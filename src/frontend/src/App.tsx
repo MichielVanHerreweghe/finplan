@@ -1,7 +1,9 @@
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { NavLink, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { useAuth } from "react-oidc-context";
 import {
   ArrowLeftRight,
   LayoutDashboard,
+  LogOut,
   PiggyBank,
   Tags,
   Wallet,
@@ -9,12 +11,15 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { TransactionsPage } from "@/features/transactions/TransactionsPage";
 import { CategoriesPage } from "@/features/categories/CategoriesPage";
 import { SavingGoalsPage } from "@/features/savingGoals/SavingGoalsPage";
 import { PocketsPage } from "@/features/pockets/PocketsPage";
 import { PocketDetailPage } from "@/features/pockets/PocketDetailPage";
+import { RequireAuth } from "@/features/auth/RequireAuth";
+import { CallbackPage } from "@/features/auth/CallbackPage";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -25,6 +30,34 @@ const navItems = [
 ];
 
 export function App() {
+  return (
+    <Routes>
+      <Route path="/auth/callback" element={<CallbackPage />} />
+      <Route
+        element={
+          <RequireAuth>
+            <AppLayout />
+          </RequireAuth>
+        }
+      >
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/transactions" element={<TransactionsPage />} />
+        <Route path="/pockets" element={<PocketsPage />} />
+        <Route path="/pockets/:id" element={<PocketDetailPage />} />
+        <Route path="/categories" element={<CategoriesPage />} />
+        <Route path="/saving-goals" element={<SavingGoalsPage />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Route>
+    </Routes>
+  );
+}
+
+function AppLayout() {
+  const auth = useAuth();
+  const profile = auth.user?.profile;
+  const userLabel = profile?.name ?? profile?.email ?? "Account";
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="flex w-60 shrink-0 flex-col border-r">
@@ -51,20 +84,24 @@ export function App() {
             </NavLink>
           ))}
         </nav>
+        <div className="border-t p-3">
+          <div className="truncate px-3 pb-2 text-xs text-muted-foreground" title={userLabel}>
+            {userLabel}
+          </div>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-muted-foreground"
+            onClick={() => void auth.removeUser()}
+          >
+            <LogOut className="size-4" />
+            Sign out
+          </Button>
+        </div>
       </aside>
 
       <main className="flex-1 overflow-x-hidden">
         <div className="mx-auto max-w-4xl px-8 py-8">
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/transactions" element={<TransactionsPage />} />
-            <Route path="/pockets" element={<PocketsPage />} />
-            <Route path="/pockets/:id" element={<PocketDetailPage />} />
-            <Route path="/categories" element={<CategoriesPage />} />
-            <Route path="/saving-goals" element={<SavingGoalsPage />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
+          <Outlet />
         </div>
       </main>
     </div>

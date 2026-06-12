@@ -2,6 +2,7 @@ using FinPlan.Domain.Common;
 using FinPlan.Domain.Pockets;
 using FinPlan.Domain.SavingGoals;
 using FinPlan.Domain.Transactions;
+using FinPlan.Domain.Users;
 using FinPlan.Infrastructure.Database;
 using FinPlan.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -37,5 +38,6 @@ public static class InfrastructureModule
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
         services.AddScoped<IPocketRepository, PocketRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
     }
 }

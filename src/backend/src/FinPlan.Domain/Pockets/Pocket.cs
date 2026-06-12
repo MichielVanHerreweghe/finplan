@@ -3,7 +3,7 @@ using FluentResults;
 
 namespace FinPlan.Domain.Pockets;
 
-public sealed class Pocket : Entity, IAggregateRoot
+public sealed class Pocket : OwnedEntity, IAggregateRoot
 {
     public string Name { get; private set; }
     public string? Description { get; private set; }
