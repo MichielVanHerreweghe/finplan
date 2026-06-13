@@ -1,3 +1,4 @@
+using FinPlan.Domain.Activities;
 using FinPlan.Domain.Transactions;
 
 namespace FinPlan.Api.GraphQL;
@@ -56,3 +57,20 @@ public sealed record UpdatePocketInput(
     string? Description,
     int? ParentPocketId,
     decimal StartingAmount);
+
+public sealed record CreateActivityInput(string Name, string? Description);
+
+public sealed record AddActivityMemberInput(int ActivityId, string Email);
+
+public sealed record RemoveActivityMemberInput(int ActivityId, int UserId);
+
+public sealed record CreateActivityExpenseInput(
+    int ActivityId,
+    string Description,
+    DateOnly Date,
+    decimal Amount,
+    int PaidByUserId,
+    SplitType SplitType,
+    IReadOnlyList<SplitInput> Splits);
+
+public sealed record SplitInput(int UserId, decimal? ExactAmount, decimal? Percentage);

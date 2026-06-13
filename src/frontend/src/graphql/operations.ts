@@ -253,3 +253,140 @@ export const DeletePocketMutation = graphql(`
     }
   }
 `);
+
+export const ActivityFields = graphql(`
+  fragment ActivityFields on ActivityResponse {
+    id
+    name
+    description
+    createdByUserId
+    members {
+      userId
+      displayName
+      email
+    }
+    balances {
+      userId
+      net
+    }
+  }
+`);
+
+export const ActivityExpenseFields = graphql(`
+  fragment ActivityExpenseFields on ActivityExpenseResponse {
+    id
+    activityId
+    description
+    date
+    amount
+    paidByUserId
+    splitType
+    splits {
+      userId
+      amount
+      percentage
+    }
+  }
+`);
+
+export const ActivitiesQuery = graphql(`
+  query Activities {
+    activities {
+      ...ActivityFields
+    }
+  }
+`);
+
+export const ActivityQuery = graphql(`
+  query Activity($id: Int!) {
+    activity(id: $id) {
+      ...ActivityFields
+    }
+  }
+`);
+
+export const ActivityExpensesQuery = graphql(`
+  query ActivityExpenses($activityId: Int!) {
+    activityExpenses(activityId: $activityId) {
+      ...ActivityExpenseFields
+    }
+  }
+`);
+
+export const CreateActivityMutation = graphql(`
+  mutation CreateActivity($input: CreateActivityInput!) {
+    createActivity(input: $input) {
+      id
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const DeleteActivityMutation = graphql(`
+  mutation DeleteActivity($input: DeleteActivityInput!) {
+    deleteActivity(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const AddActivityMemberMutation = graphql(`
+  mutation AddActivityMember($input: AddActivityMemberInput!) {
+    addActivityMember(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const RemoveActivityMemberMutation = graphql(`
+  mutation RemoveActivityMember($input: RemoveActivityMemberInput!) {
+    removeActivityMember(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const CreateActivityExpenseMutation = graphql(`
+  mutation CreateActivityExpense($input: CreateActivityExpenseInput!) {
+    createActivityExpense(input: $input) {
+      id
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const DeleteActivityExpenseMutation = graphql(`
+  mutation DeleteActivityExpense($input: DeleteActivityExpenseInput!) {
+    deleteActivityExpense(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
