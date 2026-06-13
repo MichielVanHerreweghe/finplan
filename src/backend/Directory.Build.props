@@ -7,7 +7,7 @@
     Do not edit the version by hand.
   -->
   <PropertyGroup>
-    <Version>0.1.0</Version> <!-- x-release-please-version -->
+    <Version>0.2.0</Version> <!-- x-release-please-version -->
   </PropertyGroup>
 
 </Project>
