@@ -21,6 +21,7 @@ builder.Services.RegisterApplicationInfrastructure(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ICurrentOwnerProvider, HttpCurrentOwnerProvider>();
+builder.Services.AddScoped<ICurrentUserProvider, HttpCurrentUserProvider>();
 builder.Services.AddScoped<IUserProvisioningService, UserProvisioningService>();
 
 builder.Services.AddFinPlanAuthentication(builder.Configuration);
@@ -54,7 +55,10 @@ app.UseAuthorization();
 
 // Must run after authentication (needs the principal) and before GraphQL (so the resolved
 // owner id is in HttpContext.Items by the time any resolver/DataLoader queries the DbContext).
+// JIT provisioning resolves the acting user + personal owner; the active-context step then
+// resolves and authorizes the effective owner (personal or a group the user belongs to).
 app.UseMiddleware<JitProvisioningMiddleware>();
+app.UseMiddleware<ActiveContextMiddleware>();
 
 app.MapGraphQL()
     .WithOptions((GraphQLServerOptions options) =>

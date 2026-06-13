@@ -23,6 +23,103 @@ namespace FinPlan.Infrastructure.Database.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("FinPlan.Domain.Common.Owner", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind");
+
+                    b.ToTable("Owner", "finplan");
+                });
+
+            modelBuilder.Entity("FinPlan.Domain.Groups.Group", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("OwnerId")
+                        .IsUnique();
+
+                    b.ToTable("Group", "finplan");
+                });
+
+            modelBuilder.Entity("FinPlan.Domain.Groups.GroupMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("GroupId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("GroupId", "UserId")
+                        .IsUnique()
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
+                    b.ToTable("GroupMember", "finplan");
+                });
+
             modelBuilder.Entity("FinPlan.Domain.Pockets.Pocket", b =>
                 {
                     b.Property<int>("Id")
@@ -58,6 +155,8 @@ namespace FinPlan.Infrastructure.Database.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
 
                     b.HasIndex("ParentPocketId");
 
@@ -102,6 +201,8 @@ namespace FinPlan.Infrastructure.Database.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
 
                     b.HasIndex("PocketId");
 
@@ -158,6 +259,8 @@ namespace FinPlan.Infrastructure.Database.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("FromPocketId");
+
+                    b.HasIndex("OwnerId");
 
                     b.HasIndex("SavingGoalId");
 
@@ -227,11 +330,17 @@ namespace FinPlan.Infrastructure.Database.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("UpdatedAt")
                         .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OwnerId")
+                        .IsUnique();
 
                     b.HasIndex("Issuer", "ExternalSubject")
                         .IsUnique()
@@ -240,8 +349,34 @@ namespace FinPlan.Infrastructure.Database.Migrations
                     b.ToTable("User", "finplan");
                 });
 
+            modelBuilder.Entity("FinPlan.Domain.Groups.Group", b =>
+                {
+                    b.HasOne("FinPlan.Domain.Common.Owner", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("FinPlan.Domain.Groups.GroupMember", b =>
+                {
+                    b.HasOne("FinPlan.Domain.Groups.Group", null)
+                        .WithMany("Members")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("FinPlan.Domain.Pockets.Pocket", b =>
                 {
+                    b.HasOne("FinPlan.Domain.Common.Owner", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FinPlan.Domain.Pockets.Pocket", null)
                         .WithMany()
                         .HasForeignKey("ParentPocketId")
@@ -250,6 +385,12 @@ namespace FinPlan.Infrastructure.Database.Migrations
 
             modelBuilder.Entity("FinPlan.Domain.SavingGoals.SavingGoal", b =>
                 {
+                    b.HasOne("FinPlan.Domain.Common.Owner", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FinPlan.Domain.Pockets.Pocket", null)
                         .WithMany()
                         .HasForeignKey("PocketId")
@@ -264,6 +405,12 @@ namespace FinPlan.Infrastructure.Database.Migrations
                         .HasForeignKey("FromPocketId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("FinPlan.Domain.Common.Owner", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FinPlan.Domain.SavingGoals.SavingGoal", null)
                         .WithMany()
                         .HasForeignKey("SavingGoalId")
@@ -273,6 +420,31 @@ namespace FinPlan.Infrastructure.Database.Migrations
                         .WithMany()
                         .HasForeignKey("ToPocketId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("FinPlan.Domain.Transactions.TransactionCategory", b =>
+                {
+                    b.HasOne("FinPlan.Domain.Common.Owner", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FinPlan.Domain.Users.User", b =>
+                {
+                    b.HasOne("FinPlan.Domain.Common.Owner", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("FinPlan.Domain.Groups.Group", b =>
+                {
+                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }

@@ -16,5 +16,17 @@ internal abstract class EntityConfiguration<T> : IEntityTypeConfiguration<T> whe
 
         builder.Property(x => x.UpdatedAt)
             .IsConcurrencyToken();
+
+        // Every owned aggregate's OwnerId references the shared Owner anchor. Configured here
+        // (navigationless) so it applies uniformly to all current and future owned entities,
+        // mirroring how the owner query filter is applied centrally. Restrict: an owner with
+        // data cannot be deleted at the DB level.
+        if (typeof(IOwnedEntity).IsAssignableFrom(typeof(T)))
+        {
+            builder.HasOne(typeof(Owner))
+                .WithMany()
+                .HasForeignKey(nameof(IOwnedEntity.OwnerId))
+                .OnDelete(DeleteBehavior.Restrict);
+        }
     }
 }

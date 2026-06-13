@@ -1,4 +1,5 @@
 using FinPlan.Domain.Common;
+using FinPlan.Domain.Groups;
 using FinPlan.Domain.Pockets;
 using FinPlan.Domain.SavingGoals;
 using FinPlan.Domain.Transactions;
@@ -39,5 +40,6 @@ public static class InfrastructureModule
         services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
         services.AddScoped<IPocketRepository, PocketRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IGroupRepository, GroupRepository>();
     }
 }
