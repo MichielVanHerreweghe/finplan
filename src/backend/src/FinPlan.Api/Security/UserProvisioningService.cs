@@ -6,10 +6,15 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace FinPlan.Api.Security;
 
+// The resolved local identity for an OIDC principal: the internal user id and the user's
+// personal owner id (their default active context).
+public readonly record struct ProvisionedUser(int UserId, int PersonalOwnerId);
+
 public interface IUserProvisioningService
 {
-    // Returns the internal user id for the given OIDC identity, creating the User on first sight.
-    Task<int> EnsureProvisionedAsync(
+    // Returns the local identity for the given OIDC identity, creating the User (and its personal
+    // Owner) on first sight.
+    Task<ProvisionedUser> EnsureProvisionedAsync(
         string issuer, string subject, string? email, string? displayName, CancellationToken ct);
 }
 
@@ -20,12 +25,12 @@ internal sealed class UserProvisioningService(
 {
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(30);
 
-    public async Task<int> EnsureProvisionedAsync(
+    public async Task<ProvisionedUser> EnsureProvisionedAsync(
         string issuer, string subject, string? email, string? displayName, CancellationToken ct)
     {
         string cacheKey = CacheKey(issuer, subject);
-        if (cache.TryGetValue(cacheKey, out int cachedId))
-            return cachedId;
+        if (cache.TryGetValue(cacheKey, out ProvisionedUser cached))
+            return cached;
 
         User? user = await users.GetByExternalIdentityAsync(issuer, subject, ct);
 
@@ -40,8 +45,9 @@ internal sealed class UserProvisioningService(
             await unitOfWork.SaveChangesAsync(ct);
         }
 
-        cache.Set(cacheKey, user.Id, new MemoryCacheEntryOptions { SlidingExpiration = CacheTtl });
-        return user.Id;
+        ProvisionedUser resolved = new(user.Id, user.OwnerId);
+        cache.Set(cacheKey, resolved, new MemoryCacheEntryOptions { SlidingExpiration = CacheTtl });
+        return resolved;
     }
 
     private async Task<User> CreateAsync(

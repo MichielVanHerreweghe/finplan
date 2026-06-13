@@ -253,3 +253,101 @@ export const DeletePocketMutation = graphql(`
     }
   }
 `);
+
+export const MyContextsQuery = graphql(`
+  query MyContexts {
+    myContexts {
+      ownerId
+      kind
+      name
+    }
+  }
+`);
+
+export const GroupFields = graphql(`
+  fragment GroupFields on GroupResponse {
+    id
+    ownerId
+    name
+    description
+    createdByUserId
+    members {
+      userId
+      displayName
+      email
+    }
+  }
+`);
+
+export const GroupsQuery = graphql(`
+  query Groups {
+    groups {
+      ...GroupFields
+    }
+  }
+`);
+
+export const CreateGroupMutation = graphql(`
+  mutation CreateGroup($input: CreateGroupInput!) {
+    createGroup(input: $input) {
+      ownerId
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const AddGroupMemberMutation = graphql(`
+  mutation AddGroupMember($input: AddGroupMemberInput!) {
+    addGroupMember(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const RemoveGroupMemberMutation = graphql(`
+  mutation RemoveGroupMember($input: RemoveGroupMemberInput!) {
+    removeGroupMember(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const LeaveGroupMutation = graphql(`
+  mutation LeaveGroup($input: LeaveGroupInput!) {
+    leaveGroup(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const DeleteGroupMutation = graphql(`
+  mutation DeleteGroup($input: DeleteGroupInput!) {
+    deleteGroup(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);

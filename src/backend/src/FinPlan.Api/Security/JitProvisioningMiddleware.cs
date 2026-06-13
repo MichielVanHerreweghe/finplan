@@ -14,11 +14,12 @@ public sealed class JitProvisioningMiddleware(RequestDelegate next)
 
             if (!string.IsNullOrEmpty(subject) && !string.IsNullOrEmpty(issuer))
             {
-                int userId = await provisioning.EnsureProvisionedAsync(
+                ProvisionedUser provisioned = await provisioning.EnsureProvisionedAsync(
                     issuer, subject, context.User.Email(), context.User.DisplayName(),
                     context.RequestAborted);
 
-                context.Items[CurrentUser.UserIdItemKey] = userId;
+                context.Items[CurrentUser.UserIdItemKey] = provisioned.UserId;
+                context.Items[CurrentUser.PersonalOwnerIdItemKey] = provisioned.PersonalOwnerId;
             }
         }
 

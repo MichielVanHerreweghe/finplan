@@ -56,3 +56,9 @@ public sealed record UpdatePocketInput(
     string? Description,
     int? ParentPocketId,
     decimal StartingAmount);
+
+public sealed record CreateGroupInput(string Name, string? Description);
+
+public sealed record AddGroupMemberInput(int GroupId, string Email);
+
+public sealed record RemoveGroupMemberInput(int GroupId, int UserId);
