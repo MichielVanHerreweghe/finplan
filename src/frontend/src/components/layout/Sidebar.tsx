@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ContextSwitcher } from "@/features/groups/ContextSwitcher";
+import { useRequests } from "@/features/requests/useRequests";
 import { navItems } from "./nav";
 
 /** Desktop navigation rail (hidden below `md`). */
@@ -13,6 +14,7 @@ export function Sidebar() {
   const auth = useAuth();
   const profile = auth.user?.profile;
   const userLabel = profile?.name ?? profile?.email ?? "Account";
+  const { incomingCount } = useRequests();
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r bg-card md:flex">
@@ -40,7 +42,12 @@ export function Sidebar() {
             }
           >
             <Icon className="size-4" />
-            {label}
+            <span className="flex-1">{label}</span>
+            {to === "/requests" && incomingCount > 0 && (
+              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+                {incomingCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

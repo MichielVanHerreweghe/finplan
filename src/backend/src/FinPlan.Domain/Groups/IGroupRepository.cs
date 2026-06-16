@@ -13,4 +13,8 @@ public interface IGroupRepository : IRepository<Group>
     // Authorization for the active-context resolver: is the user a member of the group whose
     // data owner is ownerId? Queries unfiltered tables, safe before the effective owner is set.
     Task<bool> IsMemberOfOwnerAsync(int ownerId, int userId, CancellationToken ct = default);
+
+    // Loads a group with its members WITHOUT membership scoping — for accepting an invitation,
+    // where the acting user is not (yet) a member.
+    Task<Group?> GetByIdWithMembersAsync(int id, CancellationToken ct = default);
 }

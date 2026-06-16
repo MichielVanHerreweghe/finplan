@@ -124,8 +124,13 @@ export function ActivityDetailPage() {
                       {member.userId === activity.createdByUserId && (
                         <span className="ml-2 text-xs text-muted-foreground">creator</span>
                       )}
+                      {member.pending && (
+                        <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          pending
+                        </span>
+                      )}
                     </span>
-                    {member.userId !== activity.createdByUserId && (
+                    {member.userId !== activity.createdByUserId && !member.pending && (
                       <button
                         type="button"
                         className="text-muted-foreground hover:text-destructive"
@@ -275,7 +280,7 @@ export function ActivityDetailPage() {
             open={expenseOpen}
             onOpenChange={setExpenseOpen}
             activityId={activityId}
-            members={members}
+            members={members.filter((member) => !member.pending)}
             defaultPayerUserId={currentUserId}
             onSaved={refetch}
           />

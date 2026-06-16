@@ -4,6 +4,7 @@ export interface ActivityMember {
   userId: number;
   displayName?: string | null;
   email?: string | null;
+  pending?: boolean | null;
 }
 
 /** Best available human label for a member: display name, then email, then a fallback. */

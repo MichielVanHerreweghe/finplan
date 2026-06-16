@@ -1,6 +1,8 @@
 using FinPlan.Domain.Activities;
 using FinPlan.Domain.Common;
+using FinPlan.Domain.Contacts;
 using FinPlan.Domain.Groups;
+using FinPlan.Domain.Invitations;
 using FinPlan.Domain.Pockets;
 using FinPlan.Domain.SavingGoals;
 using FinPlan.Domain.Transactions;
@@ -44,5 +46,8 @@ public static class InfrastructureModule
         services.AddScoped<IActivityRepository, ActivityRepository>();
         services.AddScoped<IActivityExpenseRepository, ActivityExpenseRepository>();
         services.AddScoped<IGroupRepository, GroupRepository>();
+        services.AddScoped<IContactRepository, ContactRepository>();
+        services.AddScoped<IContactLedgerRepository, ContactLedgerRepository>();
+        services.AddScoped<IInvitationRepository, InvitationRepository>();
     }
 }

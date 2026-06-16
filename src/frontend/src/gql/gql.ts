@@ -35,25 +35,40 @@ type Documents = {
     "\n  mutation CreatePocket($input: CreatePocketInput!) {\n    createPocket(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.CreatePocketDocument,
     "\n  mutation UpdatePocket($input: UpdatePocketInput!) {\n    updatePocket(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.UpdatePocketDocument,
     "\n  mutation DeletePocket($input: DeletePocketInput!) {\n    deletePocket(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.DeletePocketDocument,
-    "\n  fragment ActivityFields on ActivityResponse {\n    id\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n    }\n    balances {\n      userId\n      net\n    }\n    settlements {\n      fromUserId\n      toUserId\n      amount\n    }\n  }\n": typeof types.ActivityFieldsFragmentDoc,
+    "\n  fragment ActivityFields on ActivityResponse {\n    id\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n      pending\n    }\n    balances {\n      userId\n      net\n    }\n    settlements {\n      fromUserId\n      toUserId\n      amount\n    }\n  }\n": typeof types.ActivityFieldsFragmentDoc,
     "\n  fragment ActivityExpenseFields on ActivityExpenseResponse {\n    id\n    activityId\n    description\n    date\n    amount\n    paidByUserId\n    splitType\n    splits {\n      userId\n      amount\n      percentage\n    }\n  }\n": typeof types.ActivityExpenseFieldsFragmentDoc,
     "\n  query Activities($search: String, $sort: NameSort) {\n    activities(search: $search, sort: $sort) {\n      ...ActivityFields\n    }\n  }\n": typeof types.ActivitiesDocument,
     "\n  query Activity($id: Int!) {\n    activity(id: $id) {\n      ...ActivityFields\n    }\n  }\n": typeof types.ActivityDocument,
     "\n  query ActivityExpenses($activityId: Int!) {\n    activityExpenses(activityId: $activityId) {\n      ...ActivityExpenseFields\n    }\n  }\n": typeof types.ActivityExpensesDocument,
     "\n  mutation CreateActivity($input: CreateActivityInput!) {\n    createActivity(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.CreateActivityDocument,
     "\n  mutation DeleteActivity($input: DeleteActivityInput!) {\n    deleteActivity(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.DeleteActivityDocument,
-    "\n  mutation AddActivityMember($input: AddActivityMemberInput!) {\n    addActivityMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.AddActivityMemberDocument,
     "\n  mutation RemoveActivityMember($input: RemoveActivityMemberInput!) {\n    removeActivityMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.RemoveActivityMemberDocument,
     "\n  mutation CreateActivityExpense($input: CreateActivityExpenseInput!) {\n    createActivityExpense(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.CreateActivityExpenseDocument,
     "\n  mutation DeleteActivityExpense($input: DeleteActivityExpenseInput!) {\n    deleteActivityExpense(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.DeleteActivityExpenseDocument,
     "\n  query MyContexts {\n    myContexts {\n      ownerId\n      kind\n      name\n    }\n  }\n": typeof types.MyContextsDocument,
-    "\n  fragment GroupFields on GroupResponse {\n    id\n    ownerId\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n    }\n  }\n": typeof types.GroupFieldsFragmentDoc,
+    "\n  fragment GroupFields on GroupResponse {\n    id\n    ownerId\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n      pending\n    }\n  }\n": typeof types.GroupFieldsFragmentDoc,
     "\n  query Groups($search: String, $sort: NameSort) {\n    groups(search: $search, sort: $sort) {\n      ...GroupFields\n    }\n  }\n": typeof types.GroupsDocument,
     "\n  mutation CreateGroup($input: CreateGroupInput!) {\n    createGroup(input: $input) {\n      ownerId\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.CreateGroupDocument,
-    "\n  mutation AddGroupMember($input: AddGroupMemberInput!) {\n    addGroupMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.AddGroupMemberDocument,
     "\n  mutation RemoveGroupMember($input: RemoveGroupMemberInput!) {\n    removeGroupMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.RemoveGroupMemberDocument,
     "\n  mutation LeaveGroup($input: LeaveGroupInput!) {\n    leaveGroup(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.LeaveGroupDocument,
     "\n  mutation DeleteGroup($input: DeleteGroupInput!) {\n    deleteGroup(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.DeleteGroupDocument,
+    "\n  query Me {\n    me {\n      id\n      email\n      displayName\n      firstName\n      lastName\n      profileCompleted\n    }\n  }\n": typeof types.MeDocument,
+    "\n  mutation CompleteProfile($input: CompleteProfileInput!) {\n    completeProfile(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.CompleteProfileDocument,
+    "\n  fragment ContactFields on ContactResponse {\n    id\n    userId\n    displayName\n    firstName\n    lastName\n    email\n    net\n  }\n": typeof types.ContactFieldsFragmentDoc,
+    "\n  query Contacts($search: String, $sort: NameSort) {\n    contacts(search: $search, sort: $sort) {\n      ...ContactFields\n    }\n  }\n": typeof types.ContactsDocument,
+    "\n  mutation RemoveContact($input: RemoveContactInput!) {\n    removeContact(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.RemoveContactDocument,
+    "\n  fragment ContactExpenseFields on ContactExpenseResponse {\n    id\n    description\n    date\n    amount\n    paidByUserId\n    splitType\n    splits {\n      userId\n      amount\n      percentage\n    }\n  }\n": typeof types.ContactExpenseFieldsFragmentDoc,
+    "\n  fragment ContactSettlementFields on ContactSettlementResponse {\n    id\n    fromUserId\n    toUserId\n    amount\n    date\n  }\n": typeof types.ContactSettlementFieldsFragmentDoc,
+    "\n  query ContactLedger($contactId: Int!) {\n    contactLedger(contactId: $contactId) {\n      contactId\n      userId\n      displayName\n      firstName\n      lastName\n      email\n      net\n      expenses {\n        ...ContactExpenseFields\n      }\n      settlements {\n        ...ContactSettlementFields\n      }\n    }\n  }\n": typeof types.ContactLedgerDocument,
+    "\n  mutation CreateContactExpense($input: CreateContactExpenseInput!) {\n    createContactExpense(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.CreateContactExpenseDocument,
+    "\n  mutation DeleteContactExpense($input: DeleteContactExpenseInput!) {\n    deleteContactExpense(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.DeleteContactExpenseDocument,
+    "\n  mutation RecordContactSettlement($input: RecordContactSettlementInput!) {\n    recordContactSettlement(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.RecordContactSettlementDocument,
+    "\n  mutation DeleteContactSettlement($input: DeleteContactSettlementInput!) {\n    deleteContactSettlement(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.DeleteContactSettlementDocument,
+    "\n  fragment InvitationFields on InvitationResponse {\n    id\n    type\n    direction\n    otherUserId\n    otherDisplayName\n    otherEmail\n    targetId\n    targetName\n    createdAt\n  }\n": typeof types.InvitationFieldsFragmentDoc,
+    "\n  query MyInvitations {\n    myInvitations {\n      ...InvitationFields\n    }\n  }\n": typeof types.MyInvitationsDocument,
+    "\n  mutation SendInvitation($input: SendInvitationInput!) {\n    sendInvitation(input: $input) {\n      invitationId\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.SendInvitationDocument,
+    "\n  mutation AcceptInvitation($input: AcceptInvitationInput!) {\n    acceptInvitation(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.AcceptInvitationDocument,
+    "\n  mutation DeclineInvitation($input: DeclineInvitationInput!) {\n    declineInvitation(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": typeof types.DeclineInvitationDocument,
 };
 const documents: Documents = {
     "\n  fragment TransactionFields on TransactionResponse {\n    id\n    name\n    date\n    amount\n    type\n    categoryId\n    fromPocketId\n    toPocketId\n    savingGoalId\n    category {\n      id\n      name\n    }\n  }\n": types.TransactionFieldsFragmentDoc,
@@ -77,25 +92,40 @@ const documents: Documents = {
     "\n  mutation CreatePocket($input: CreatePocketInput!) {\n    createPocket(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.CreatePocketDocument,
     "\n  mutation UpdatePocket($input: UpdatePocketInput!) {\n    updatePocket(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.UpdatePocketDocument,
     "\n  mutation DeletePocket($input: DeletePocketInput!) {\n    deletePocket(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.DeletePocketDocument,
-    "\n  fragment ActivityFields on ActivityResponse {\n    id\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n    }\n    balances {\n      userId\n      net\n    }\n    settlements {\n      fromUserId\n      toUserId\n      amount\n    }\n  }\n": types.ActivityFieldsFragmentDoc,
+    "\n  fragment ActivityFields on ActivityResponse {\n    id\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n      pending\n    }\n    balances {\n      userId\n      net\n    }\n    settlements {\n      fromUserId\n      toUserId\n      amount\n    }\n  }\n": types.ActivityFieldsFragmentDoc,
     "\n  fragment ActivityExpenseFields on ActivityExpenseResponse {\n    id\n    activityId\n    description\n    date\n    amount\n    paidByUserId\n    splitType\n    splits {\n      userId\n      amount\n      percentage\n    }\n  }\n": types.ActivityExpenseFieldsFragmentDoc,
     "\n  query Activities($search: String, $sort: NameSort) {\n    activities(search: $search, sort: $sort) {\n      ...ActivityFields\n    }\n  }\n": types.ActivitiesDocument,
     "\n  query Activity($id: Int!) {\n    activity(id: $id) {\n      ...ActivityFields\n    }\n  }\n": types.ActivityDocument,
     "\n  query ActivityExpenses($activityId: Int!) {\n    activityExpenses(activityId: $activityId) {\n      ...ActivityExpenseFields\n    }\n  }\n": types.ActivityExpensesDocument,
     "\n  mutation CreateActivity($input: CreateActivityInput!) {\n    createActivity(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.CreateActivityDocument,
     "\n  mutation DeleteActivity($input: DeleteActivityInput!) {\n    deleteActivity(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.DeleteActivityDocument,
-    "\n  mutation AddActivityMember($input: AddActivityMemberInput!) {\n    addActivityMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.AddActivityMemberDocument,
     "\n  mutation RemoveActivityMember($input: RemoveActivityMemberInput!) {\n    removeActivityMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.RemoveActivityMemberDocument,
     "\n  mutation CreateActivityExpense($input: CreateActivityExpenseInput!) {\n    createActivityExpense(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.CreateActivityExpenseDocument,
     "\n  mutation DeleteActivityExpense($input: DeleteActivityExpenseInput!) {\n    deleteActivityExpense(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.DeleteActivityExpenseDocument,
     "\n  query MyContexts {\n    myContexts {\n      ownerId\n      kind\n      name\n    }\n  }\n": types.MyContextsDocument,
-    "\n  fragment GroupFields on GroupResponse {\n    id\n    ownerId\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n    }\n  }\n": types.GroupFieldsFragmentDoc,
+    "\n  fragment GroupFields on GroupResponse {\n    id\n    ownerId\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n      pending\n    }\n  }\n": types.GroupFieldsFragmentDoc,
     "\n  query Groups($search: String, $sort: NameSort) {\n    groups(search: $search, sort: $sort) {\n      ...GroupFields\n    }\n  }\n": types.GroupsDocument,
     "\n  mutation CreateGroup($input: CreateGroupInput!) {\n    createGroup(input: $input) {\n      ownerId\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.CreateGroupDocument,
-    "\n  mutation AddGroupMember($input: AddGroupMemberInput!) {\n    addGroupMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.AddGroupMemberDocument,
     "\n  mutation RemoveGroupMember($input: RemoveGroupMemberInput!) {\n    removeGroupMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.RemoveGroupMemberDocument,
     "\n  mutation LeaveGroup($input: LeaveGroupInput!) {\n    leaveGroup(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.LeaveGroupDocument,
     "\n  mutation DeleteGroup($input: DeleteGroupInput!) {\n    deleteGroup(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.DeleteGroupDocument,
+    "\n  query Me {\n    me {\n      id\n      email\n      displayName\n      firstName\n      lastName\n      profileCompleted\n    }\n  }\n": types.MeDocument,
+    "\n  mutation CompleteProfile($input: CompleteProfileInput!) {\n    completeProfile(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.CompleteProfileDocument,
+    "\n  fragment ContactFields on ContactResponse {\n    id\n    userId\n    displayName\n    firstName\n    lastName\n    email\n    net\n  }\n": types.ContactFieldsFragmentDoc,
+    "\n  query Contacts($search: String, $sort: NameSort) {\n    contacts(search: $search, sort: $sort) {\n      ...ContactFields\n    }\n  }\n": types.ContactsDocument,
+    "\n  mutation RemoveContact($input: RemoveContactInput!) {\n    removeContact(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.RemoveContactDocument,
+    "\n  fragment ContactExpenseFields on ContactExpenseResponse {\n    id\n    description\n    date\n    amount\n    paidByUserId\n    splitType\n    splits {\n      userId\n      amount\n      percentage\n    }\n  }\n": types.ContactExpenseFieldsFragmentDoc,
+    "\n  fragment ContactSettlementFields on ContactSettlementResponse {\n    id\n    fromUserId\n    toUserId\n    amount\n    date\n  }\n": types.ContactSettlementFieldsFragmentDoc,
+    "\n  query ContactLedger($contactId: Int!) {\n    contactLedger(contactId: $contactId) {\n      contactId\n      userId\n      displayName\n      firstName\n      lastName\n      email\n      net\n      expenses {\n        ...ContactExpenseFields\n      }\n      settlements {\n        ...ContactSettlementFields\n      }\n    }\n  }\n": types.ContactLedgerDocument,
+    "\n  mutation CreateContactExpense($input: CreateContactExpenseInput!) {\n    createContactExpense(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.CreateContactExpenseDocument,
+    "\n  mutation DeleteContactExpense($input: DeleteContactExpenseInput!) {\n    deleteContactExpense(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.DeleteContactExpenseDocument,
+    "\n  mutation RecordContactSettlement($input: RecordContactSettlementInput!) {\n    recordContactSettlement(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.RecordContactSettlementDocument,
+    "\n  mutation DeleteContactSettlement($input: DeleteContactSettlementInput!) {\n    deleteContactSettlement(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.DeleteContactSettlementDocument,
+    "\n  fragment InvitationFields on InvitationResponse {\n    id\n    type\n    direction\n    otherUserId\n    otherDisplayName\n    otherEmail\n    targetId\n    targetName\n    createdAt\n  }\n": types.InvitationFieldsFragmentDoc,
+    "\n  query MyInvitations {\n    myInvitations {\n      ...InvitationFields\n    }\n  }\n": types.MyInvitationsDocument,
+    "\n  mutation SendInvitation($input: SendInvitationInput!) {\n    sendInvitation(input: $input) {\n      invitationId\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.SendInvitationDocument,
+    "\n  mutation AcceptInvitation($input: AcceptInvitationInput!) {\n    acceptInvitation(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.AcceptInvitationDocument,
+    "\n  mutation DeclineInvitation($input: DeclineInvitationInput!) {\n    declineInvitation(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n": types.DeclineInvitationDocument,
 };
 
 /**
@@ -199,7 +229,7 @@ export function graphql(source: "\n  mutation DeletePocket($input: DeletePocketI
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment ActivityFields on ActivityResponse {\n    id\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n    }\n    balances {\n      userId\n      net\n    }\n    settlements {\n      fromUserId\n      toUserId\n      amount\n    }\n  }\n"): (typeof documents)["\n  fragment ActivityFields on ActivityResponse {\n    id\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n    }\n    balances {\n      userId\n      net\n    }\n    settlements {\n      fromUserId\n      toUserId\n      amount\n    }\n  }\n"];
+export function graphql(source: "\n  fragment ActivityFields on ActivityResponse {\n    id\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n      pending\n    }\n    balances {\n      userId\n      net\n    }\n    settlements {\n      fromUserId\n      toUserId\n      amount\n    }\n  }\n"): (typeof documents)["\n  fragment ActivityFields on ActivityResponse {\n    id\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n      pending\n    }\n    balances {\n      userId\n      net\n    }\n    settlements {\n      fromUserId\n      toUserId\n      amount\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -227,10 +257,6 @@ export function graphql(source: "\n  mutation DeleteActivity($input: DeleteActiv
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation AddActivityMember($input: AddActivityMemberInput!) {\n    addActivityMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation AddActivityMember($input: AddActivityMemberInput!) {\n    addActivityMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
 export function graphql(source: "\n  mutation RemoveActivityMember($input: RemoveActivityMemberInput!) {\n    removeActivityMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation RemoveActivityMember($input: RemoveActivityMemberInput!) {\n    removeActivityMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -247,7 +273,7 @@ export function graphql(source: "\n  query MyContexts {\n    myContexts {\n     
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment GroupFields on GroupResponse {\n    id\n    ownerId\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n    }\n  }\n"): (typeof documents)["\n  fragment GroupFields on GroupResponse {\n    id\n    ownerId\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n    }\n  }\n"];
+export function graphql(source: "\n  fragment GroupFields on GroupResponse {\n    id\n    ownerId\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n      pending\n    }\n  }\n"): (typeof documents)["\n  fragment GroupFields on GroupResponse {\n    id\n    ownerId\n    name\n    description\n    createdByUserId\n    members {\n      userId\n      displayName\n      email\n      pending\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -256,10 +282,6 @@ export function graphql(source: "\n  query Groups($search: String, $sort: NameSo
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation CreateGroup($input: CreateGroupInput!) {\n    createGroup(input: $input) {\n      ownerId\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreateGroup($input: CreateGroupInput!) {\n    createGroup(input: $input) {\n      ownerId\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation AddGroupMember($input: AddGroupMemberInput!) {\n    addGroupMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation AddGroupMember($input: AddGroupMemberInput!) {\n    addGroupMember(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -272,6 +294,74 @@ export function graphql(source: "\n  mutation LeaveGroup($input: LeaveGroupInput
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteGroup($input: DeleteGroupInput!) {\n    deleteGroup(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation DeleteGroup($input: DeleteGroupInput!) {\n    deleteGroup(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query Me {\n    me {\n      id\n      email\n      displayName\n      firstName\n      lastName\n      profileCompleted\n    }\n  }\n"): (typeof documents)["\n  query Me {\n    me {\n      id\n      email\n      displayName\n      firstName\n      lastName\n      profileCompleted\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CompleteProfile($input: CompleteProfileInput!) {\n    completeProfile(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CompleteProfile($input: CompleteProfileInput!) {\n    completeProfile(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment ContactFields on ContactResponse {\n    id\n    userId\n    displayName\n    firstName\n    lastName\n    email\n    net\n  }\n"): (typeof documents)["\n  fragment ContactFields on ContactResponse {\n    id\n    userId\n    displayName\n    firstName\n    lastName\n    email\n    net\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query Contacts($search: String, $sort: NameSort) {\n    contacts(search: $search, sort: $sort) {\n      ...ContactFields\n    }\n  }\n"): (typeof documents)["\n  query Contacts($search: String, $sort: NameSort) {\n    contacts(search: $search, sort: $sort) {\n      ...ContactFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RemoveContact($input: RemoveContactInput!) {\n    removeContact(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation RemoveContact($input: RemoveContactInput!) {\n    removeContact(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment ContactExpenseFields on ContactExpenseResponse {\n    id\n    description\n    date\n    amount\n    paidByUserId\n    splitType\n    splits {\n      userId\n      amount\n      percentage\n    }\n  }\n"): (typeof documents)["\n  fragment ContactExpenseFields on ContactExpenseResponse {\n    id\n    description\n    date\n    amount\n    paidByUserId\n    splitType\n    splits {\n      userId\n      amount\n      percentage\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment ContactSettlementFields on ContactSettlementResponse {\n    id\n    fromUserId\n    toUserId\n    amount\n    date\n  }\n"): (typeof documents)["\n  fragment ContactSettlementFields on ContactSettlementResponse {\n    id\n    fromUserId\n    toUserId\n    amount\n    date\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query ContactLedger($contactId: Int!) {\n    contactLedger(contactId: $contactId) {\n      contactId\n      userId\n      displayName\n      firstName\n      lastName\n      email\n      net\n      expenses {\n        ...ContactExpenseFields\n      }\n      settlements {\n        ...ContactSettlementFields\n      }\n    }\n  }\n"): (typeof documents)["\n  query ContactLedger($contactId: Int!) {\n    contactLedger(contactId: $contactId) {\n      contactId\n      userId\n      displayName\n      firstName\n      lastName\n      email\n      net\n      expenses {\n        ...ContactExpenseFields\n      }\n      settlements {\n        ...ContactSettlementFields\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateContactExpense($input: CreateContactExpenseInput!) {\n    createContactExpense(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreateContactExpense($input: CreateContactExpenseInput!) {\n    createContactExpense(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteContactExpense($input: DeleteContactExpenseInput!) {\n    deleteContactExpense(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation DeleteContactExpense($input: DeleteContactExpenseInput!) {\n    deleteContactExpense(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RecordContactSettlement($input: RecordContactSettlementInput!) {\n    recordContactSettlement(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation RecordContactSettlement($input: RecordContactSettlementInput!) {\n    recordContactSettlement(input: $input) {\n      id\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteContactSettlement($input: DeleteContactSettlementInput!) {\n    deleteContactSettlement(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation DeleteContactSettlement($input: DeleteContactSettlementInput!) {\n    deleteContactSettlement(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment InvitationFields on InvitationResponse {\n    id\n    type\n    direction\n    otherUserId\n    otherDisplayName\n    otherEmail\n    targetId\n    targetName\n    createdAt\n  }\n"): (typeof documents)["\n  fragment InvitationFields on InvitationResponse {\n    id\n    type\n    direction\n    otherUserId\n    otherDisplayName\n    otherEmail\n    targetId\n    targetName\n    createdAt\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query MyInvitations {\n    myInvitations {\n      ...InvitationFields\n    }\n  }\n"): (typeof documents)["\n  query MyInvitations {\n    myInvitations {\n      ...InvitationFields\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SendInvitation($input: SendInvitationInput!) {\n    sendInvitation(input: $input) {\n      invitationId\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation SendInvitation($input: SendInvitationInput!) {\n    sendInvitation(input: $input) {\n      invitationId\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AcceptInvitation($input: AcceptInvitationInput!) {\n    acceptInvitation(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation AcceptInvitation($input: AcceptInvitationInput!) {\n    acceptInvitation(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeclineInvitation($input: DeclineInvitationInput!) {\n    declineInvitation(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation DeclineInvitation($input: DeclineInvitationInput!) {\n    declineInvitation(input: $input) {\n      boolean\n      errors {\n        ... on RequestError {\n          message\n        }\n      }\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

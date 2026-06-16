@@ -1,5 +1,7 @@
 import {
   ArrowLeftRight,
+  Contact,
+  Inbox,
   LayoutDashboard,
   PiggyBank,
   Receipt,
@@ -24,6 +26,8 @@ export const navItems: NavItem[] = [
   { to: "/saving-goals", label: "Saving Goals", icon: PiggyBank },
   { to: "/activities", label: "Activities", icon: Receipt },
   { to: "/groups", label: "Groups", icon: Users },
+  { to: "/contacts", label: "Contacts", icon: Contact },
+  { to: "/requests", label: "Requests", icon: Inbox },
 ];
 
 /** Primary destinations shown directly in the mobile bottom bar. */

@@ -2,6 +2,7 @@ using FinPlan.Application.Common.Messaging;
 using FinPlan.Application.Activities.Contracts;
 using FinPlan.Domain.Common;
 using FinPlan.Domain.Activities;
+using FinPlan.Domain.Invitations;
 using FinPlan.Domain.Users;
 using FluentResults;
 
@@ -10,6 +11,7 @@ namespace FinPlan.Application.Activities.Queries.GetActivity;
 internal sealed class GetActivityHandler(
     IActivityRepository activities,
     IActivityExpenseRepository expenses,
+    IInvitationRepository invitations,
     IUserRepository users,
     ICurrentOwnerProvider currentOwner)
     : IQueryHandler<GetActivityQuery, Result<ActivityResponse>>
@@ -25,10 +27,14 @@ internal sealed class GetActivityHandler(
         IReadOnlyList<ActivityBalanceResponse> balances = ActivityBalances.Compute(activity, activityExpenses);
         IReadOnlyList<ActivitySettlementResponse> settlements = ActivitySettlements.Compute(balances);
 
-        int[] userIds = activity.Members.Select(member => member.UserId).ToArray();
+        IReadOnlyList<Invitation> pending =
+            await invitations.GetPendingByTargetAsync(InvitationType.ActivityMember, activity.Id, ct);
+        int[] pendingUserIds = pending.Select(invitation => invitation.ToUserId).ToArray();
+
+        int[] userIds = activity.Members.Select(member => member.UserId).Concat(pendingUserIds).Distinct().ToArray();
         IReadOnlyDictionary<int, User> usersById =
             (await users.GetByIdsAsync(userIds, ct)).ToDictionary(user => user.Id);
 
-        return Result.Ok(activity.ToResponse(usersById, balances, settlements));
+        return Result.Ok(activity.ToResponse(usersById, balances, settlements, pendingUserIds));
     }
 }

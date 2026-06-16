@@ -5,8 +5,10 @@ import { z } from "zod";
 import { useMutation } from "urql";
 import { toast } from "sonner";
 
-import { AddGroupMemberMutation } from "@/graphql/operations";
+import { SendInvitationMutation } from "@/graphql/operations";
 import { payloadErrorMessage } from "@/lib/graphql-error";
+import { useContacts } from "@/features/contacts/useContacts";
+import { ContactPicker } from "@/features/contacts/ContactPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,12 +32,14 @@ interface AddMemberDialogProps {
 }
 
 export function AddMemberDialog({ open, onOpenChange, groupId, onSaved }: AddMemberDialogProps) {
-  const [, addMember] = useMutation(AddGroupMemberMutation);
+  const [, sendInvitation] = useMutation(SendInvitationMutation);
+  const { contacts } = useContacts();
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { email: "" } });
 
@@ -45,11 +49,13 @@ export function AddMemberDialog({ open, onOpenChange, groupId, onSaved }: AddMem
   }, [open, reset]);
 
   async function onSubmit(values: FormValues) {
-    const result = await addMember({ input: { groupId, email: values.email.trim() } });
+    const result = await sendInvitation({
+      input: { type: "GROUP_MEMBER", email: values.email.trim(), targetId: groupId },
+    });
     if (result.error) return toast.error(result.error.message);
-    const msg = payloadErrorMessage(result.data?.addGroupMember.errors);
+    const msg = payloadErrorMessage(result.data?.sendInvitation.errors);
     if (msg) return toast.error(msg);
-    toast.success("Member added");
+    toast.success("Request sent");
     onOpenChange(false);
     onSaved();
   }
@@ -58,9 +64,15 @@ export function AddMemberDialog({ open, onOpenChange, groupId, onSaved }: AddMem
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add member</DialogTitle>
+          <DialogTitle>Invite member</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {contacts.length > 0 && (
+            <ContactPicker
+              contacts={contacts}
+              onSelect={(email) => setValue("email", email, { shouldValidate: true })}
+            />
+          )}
           <div className="space-y-2">
             <Label htmlFor="member-email">Email</Label>
             <Input
@@ -74,7 +86,7 @@ export function AddMemberDialog({ open, onOpenChange, groupId, onSaved }: AddMem
               <p className="text-sm text-destructive">{errors.email.message}</p>
             )}
             <p className="text-xs text-muted-foreground">
-              They must have signed in to FinPlan at least once.
+              They must have signed in to FinPlan at least once, and will need to accept your invite.
             </p>
           </div>
           <DialogFooter>
@@ -82,7 +94,7 @@ export function AddMemberDialog({ open, onOpenChange, groupId, onSaved }: AddMem
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Adding…" : "Add"}
+              {isSubmitting ? "Sending…" : "Send invite"}
             </Button>
           </DialogFooter>
         </form>

@@ -1,4 +1,5 @@
-using FinPlan.Domain.Activities;
+using FinPlan.Domain.Invitations;
+using FinPlan.Domain.Splitting;
 using FinPlan.Domain.Transactions;
 
 namespace FinPlan.Api.GraphQL;
@@ -60,8 +61,6 @@ public sealed record UpdatePocketInput(
 
 public sealed record CreateActivityInput(string Name, string? Description);
 
-public sealed record AddActivityMemberInput(int ActivityId, string Email);
-
 public sealed record RemoveActivityMemberInput(int ActivityId, int UserId);
 
 public sealed record CreateActivityExpenseInput(
@@ -77,9 +76,33 @@ public sealed record SplitInput(int UserId, decimal? ExactAmount, decimal? Perce
 
 public sealed record CreateGroupInput(string Name, string? Description);
 
-public sealed record AddGroupMemberInput(int GroupId, string Email);
-
 public sealed record RemoveGroupMemberInput(int GroupId, int UserId);
+
+public sealed record CompleteProfileInput(string FirstName, string LastName);
+
+public sealed record RemoveContactInput(int ContactId);
+
+public sealed record SendInvitationInput(InvitationType Type, string Email, int? TargetId);
+
+public sealed record AcceptInvitationInput(int InvitationId);
+
+public sealed record DeclineInvitationInput(int InvitationId);
+
+public sealed record CreateContactExpenseInput(
+    int ContactId,
+    string Description,
+    DateOnly Date,
+    decimal Amount,
+    int PaidByUserId,
+    SplitType SplitType,
+    IReadOnlyList<SplitInput> Splits);
+
+public sealed record RecordContactSettlementInput(
+    int ContactId,
+    decimal Amount,
+    DateOnly Date,
+    int FromUserId,
+    int ToUserId);
 
 // ---- Query filter inputs (server-side search / filter / sort) ----
 

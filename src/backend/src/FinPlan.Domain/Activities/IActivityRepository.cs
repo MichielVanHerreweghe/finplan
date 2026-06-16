@@ -9,4 +9,8 @@ public interface IActivityRepository : IRepository<Activity>
     Task<IReadOnlyList<Activity>> GetForUserAsync(int userId, CancellationToken ct = default);
 
     Task<Activity?> GetByIdForUserAsync(int id, int userId, CancellationToken ct = default);
+
+    // Loads an activity with its members WITHOUT membership scoping — for accepting an invitation,
+    // where the acting user is not (yet) a member.
+    Task<Activity?> GetByIdWithMembersAsync(int id, CancellationToken ct = default);
 }

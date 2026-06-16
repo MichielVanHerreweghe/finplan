@@ -24,3 +24,7 @@ export type SavingGoalSort =
   | "PROGRESS_DESC"
   | "TARGET_DESC"
   | "REMAINING_ASC";
+
+export type InvitationType = "CONTACT" | "GROUP_MEMBER" | "ACTIVITY_MEMBER";
+
+export type InvitationDirection = "INCOMING" | "OUTGOING";

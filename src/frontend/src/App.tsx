@@ -12,7 +12,11 @@ import { PocketDetailPage } from "@/features/pockets/PocketDetailPage";
 import { ActivitiesPage } from "@/features/activities/ActivitiesPage";
 import { ActivityDetailPage } from "@/features/activities/ActivityDetailPage";
 import { GroupsPage } from "@/features/groups/GroupsPage";
+import { ContactsPage } from "@/features/contacts/ContactsPage";
+import { ContactDetailPage } from "@/features/contacts/ContactDetailPage";
+import { RequestsPage } from "@/features/requests/RequestsPage";
 import { RequireAuth } from "@/features/auth/RequireAuth";
+import { ProfileGate } from "@/features/auth/ProfileGate";
 import { CallbackPage } from "@/features/auth/CallbackPage";
 
 export function App() {
@@ -22,7 +26,9 @@ export function App() {
       <Route
         element={
           <RequireAuth>
-            <AppLayout />
+            <ProfileGate>
+              <AppLayout />
+            </ProfileGate>
           </RequireAuth>
         }
       >
@@ -36,6 +42,9 @@ export function App() {
         <Route path="/activities" element={<ActivitiesPage />} />
         <Route path="/activities/:id" element={<ActivityDetailPage />} />
         <Route path="/groups" element={<GroupsPage />} />
+        <Route path="/contacts" element={<ContactsPage />} />
+        <Route path="/contacts/:id" element={<ContactDetailPage />} />
+        <Route path="/requests" element={<RequestsPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>

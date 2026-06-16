@@ -1,4 +1,5 @@
 using FinPlan.Domain.Activities;
+using FinPlan.Domain.Splitting;
 using FluentResults;
 using Xunit;
 

@@ -27,4 +27,9 @@ internal sealed class GroupRepository : Repository<Group>, IGroupRepository
     public Task<bool> IsMemberOfOwnerAsync(int ownerId, int userId, CancellationToken ct = default) =>
         Set.AnyAsync(
             group => group.OwnerId == ownerId && group.Members.Any(member => member.UserId == userId), ct);
+
+    public Task<Group?> GetByIdWithMembersAsync(int id, CancellationToken ct = default) =>
+        Set
+            .Include(group => group.Members)
+            .FirstOrDefaultAsync(group => group.Id == id, ct);
 }
