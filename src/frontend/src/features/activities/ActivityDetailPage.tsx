@@ -155,7 +155,7 @@ export function ActivityDetailPage() {
                     <span
                       className={
                         balance.net > 0
-                          ? "font-medium tabular-nums text-emerald-600"
+                          ? "font-medium tabular-nums text-success"
                           : balance.net < 0
                             ? "font-medium tabular-nums text-destructive"
                             : "tabular-nums text-muted-foreground"

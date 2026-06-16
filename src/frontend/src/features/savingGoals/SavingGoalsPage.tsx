@@ -9,6 +9,7 @@ import {
   TransactionsBySavingGoalQuery,
 } from "@/graphql/operations";
 import type { SavingGoalFieldsFragment } from "@/gql/graphql";
+import type { SavingGoalSort, SavingGoalStatus } from "@/graphql/enums";
 import { payloadErrorMessage, combinedErrorMessage } from "@/lib/graphql-error";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -16,13 +17,9 @@ import { usePockets } from "@/features/pockets/usePockets";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { PageHeader } from "@/components/page-header";
+import { SearchInput } from "@/components/search-input";
+import { SortSelect } from "@/components/sort-select";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   TransactionFormDialog,
@@ -30,47 +27,31 @@ import {
 } from "@/features/transactions/TransactionFormDialog";
 import { SavingGoalFormDialog } from "./SavingGoalFormDialog";
 
-type SortKey = "name" | "deadline" | "progress" | "target" | "remaining";
-
-const sortOptions: { value: SortKey; label: string }[] = [
-  { value: "name", label: "Name (A–Z)" },
-  { value: "deadline", label: "Deadline (soonest)" },
-  { value: "progress", label: "Progress (most)" },
-  { value: "target", label: "Target (largest)" },
-  { value: "remaining", label: "Remaining (least)" },
+const SORT_OPTIONS: { value: SavingGoalSort; label: string }[] = [
+  { value: "NAME_ASC", label: "Name (A–Z)" },
+  { value: "DEADLINE_ASC", label: "Deadline (soonest)" },
+  { value: "PROGRESS_DESC", label: "Progress (most)" },
+  { value: "TARGET_DESC", label: "Target (largest)" },
+  { value: "REMAINING_ASC", label: "Remaining (least)" },
 ];
 
-const fractionDone = (goal: SavingGoalFieldsFragment) =>
-  goal.targetAmount > 0 ? goal.savedAmount / goal.targetAmount : 0;
-
-function sortGoals(
-  goals: readonly SavingGoalFieldsFragment[],
-  key: SortKey,
-): SavingGoalFieldsFragment[] {
-  const sorted = [...goals];
-  switch (key) {
-    case "name":
-      return sorted.sort((a, b) => a.name.localeCompare(b.name));
-    case "deadline":
-      // Soonest first; goals without a deadline sink to the bottom (ISO dates compare lexically).
-      return sorted.sort((a, b) => {
-        if (a.deadline && b.deadline) return a.deadline.localeCompare(b.deadline);
-        if (a.deadline) return -1;
-        if (b.deadline) return 1;
-        return a.name.localeCompare(b.name);
-      });
-    case "progress":
-      return sorted.sort((a, b) => fractionDone(b) - fractionDone(a));
-    case "target":
-      return sorted.sort((a, b) => b.targetAmount - a.targetAmount);
-    case "remaining":
-      return sorted.sort((a, b) => a.remainingAmount - b.remainingAmount);
-  }
-}
+const TABS: { key: SavingGoalStatus; label: string }[] = [
+  { key: "ACTIVE", label: "Active" },
+  { key: "COMPLETED", label: "Completed" },
+];
 
 export function SavingGoalsPage() {
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<SavingGoalStatus>("ACTIVE");
+  const [sort, setSort] = useState<SavingGoalSort>("NAME_ASC");
+  const variables = useMemo(
+    () => ({ search: search || undefined, status, sort }),
+    [search, status, sort],
+  );
+
   const [{ data, fetching, error }, reexecute] = useQuery({
     query: SavingGoalsQuery,
+    variables,
   });
   const refetch = useCallback(
     () => reexecute({ requestPolicy: "network-only" }),
@@ -81,13 +62,9 @@ export function SavingGoalsPage() {
   const [, deleteSavingGoal] = useMutation(DeleteSavingGoalMutation);
 
   const savingGoals = data?.savingGoals ?? [];
-  const activeGoals = savingGoals.filter((goal) => !goal.isCompleted);
-  const completedGoals = savingGoals.filter((goal) => goal.isCompleted);
   const pocketName = (id: number) =>
     pockets.find((pocket) => pocket.id === id)?.name;
 
-  const [tab, setTab] = useState<"active" | "completed">("active");
-  const [sort, setSort] = useState<SortKey>("name");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SavingGoalFieldsFragment | undefined>();
   const [deleting, setDeleting] = useState<SavingGoalFieldsFragment | undefined>();
@@ -125,12 +102,6 @@ export function SavingGoalsPage() {
     });
   }
 
-  const visibleGoals = tab === "active" ? activeGoals : completedGoals;
-  const sortedGoals = useMemo(
-    () => sortGoals(visibleGoals, sort),
-    [visibleGoals, sort],
-  );
-
   function openCreate() {
     setEditing(undefined);
     setFormOpen(true);
@@ -156,16 +127,44 @@ export function SavingGoalsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Saving Goals</h1>
-          <p className="text-sm text-muted-foreground">
-            Set a target on a pocket and track progress towards it.
-          </p>
+      <PageHeader
+        title="Saving Goals"
+        description="Set a target on a pocket and track progress towards it."
+        action={
+          <Button onClick={openCreate}>
+            <Plus /> New saving goal
+          </Button>
+        }
+      />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="inline-flex gap-1 rounded-lg border bg-secondary/50 p-1">
+          {TABS.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setStatus(key)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                status === key
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {label}
+            </button>
+          ))}
         </div>
-        <Button onClick={openCreate}>
-          <Plus /> New saving goal
-        </Button>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search goals…"
+            className="sm:w-52"
+          />
+          <SortSelect value={sort} onChange={setSort} options={SORT_OPTIONS} />
+        </div>
       </div>
 
       {fetching && (
@@ -178,72 +177,16 @@ export function SavingGoalsPage() {
       )}
       {!fetching && !error && savingGoals.length === 0 && (
         <p className="py-8 text-center text-muted-foreground">
-          No saving goals yet.
+          {search
+            ? "No saving goals match your search."
+            : status === "COMPLETED"
+              ? "No completed saving goals yet."
+              : "No active saving goals."}
         </p>
       )}
 
-      {!fetching && !error && savingGoals.length > 0 && (
-        <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex gap-1 rounded-lg border bg-secondary/50 p-1">
-              {(
-                [
-                  { key: "active", label: "Active", count: activeGoals.length },
-                  {
-                    key: "completed",
-                    label: "Completed",
-                    count: completedGoals.length,
-                  },
-                ] as const
-              ).map(({ key, label, count }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setTab(key)}
-                  className={cn(
-                    "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                    tab === key
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {label} ({count})
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Sort by</span>
-              <Select
-                value={sort}
-                onValueChange={(value) => setSort(value as SortKey)}
-              >
-                <SelectTrigger className="w-44">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {sortOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {visibleGoals.length === 0 && (
-            <p className="py-8 text-center text-muted-foreground">
-              {tab === "active"
-                ? "No active saving goals."
-                : "No completed saving goals yet."}
-            </p>
-          )}
-        </>
-      )}
-
       <div className="space-y-4">
-        {sortedGoals.map((goal) => {
+        {savingGoals.map((goal) => {
           const progress =
             goal.targetAmount > 0
               ? Math.min(100, (goal.savedAmount / goal.targetAmount) * 100)
@@ -252,9 +195,9 @@ export function SavingGoalsPage() {
 
           return (
             <Card key={goal.id}>
-              <CardContent className="space-y-4 p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1">
+              <CardContent className="space-y-4 p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2">
                       <h2 className="font-semibold">{goal.name}</h2>
                       {goal.isCompleted && (
@@ -310,7 +253,7 @@ export function SavingGoalsPage() {
                 <div className="space-y-1.5">
                   <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary">
                     <div
-                      className="h-full rounded-full bg-emerald-500 transition-all"
+                      className="h-full rounded-full bg-success transition-all"
                       style={{ width: `${progress}%` }}
                     />
                   </div>

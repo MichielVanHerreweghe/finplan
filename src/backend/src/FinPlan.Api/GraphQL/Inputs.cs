@@ -80,3 +80,13 @@ public sealed record CreateGroupInput(string Name, string? Description);
 public sealed record AddGroupMemberInput(int GroupId, string Email);
 
 public sealed record RemoveGroupMemberInput(int GroupId, int UserId);
+
+// ---- Query filter inputs (server-side search / filter / sort) ----
+
+public sealed record TransactionFilterInput(
+    string? Search = null,
+    TransactionType? Type = null,
+    int? CategoryId = null,
+    bool Uncategorized = false,
+    DateOnly? FromDate = null,
+    DateOnly? ToDate = null);

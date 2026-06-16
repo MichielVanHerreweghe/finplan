@@ -1,5 +1,6 @@
 using FinPlan.Application.Common.Messaging;
 using FinPlan.Application.Transactions.Contracts;
+using FinPlan.Application.Transactions.Queries.GetTransactions;
 using FinPlan.Domain.Transactions;
 using FluentResults;
 
@@ -14,6 +15,9 @@ internal sealed class GetTransactionsByPocketIdHandler(ITransactionRepository tr
         IReadOnlyList<Transaction> entities = await transactions.GetByPocketIdAsync(query.PocketId, ct);
 
         IReadOnlyList<TransactionResponse> response = entities
+            .ApplySearch(query.Search)
+            .ApplyType(query.Type)
+            .ApplySort(query.Sort)
             .Select(transaction => transaction.ToResponse())
             .ToList();
 

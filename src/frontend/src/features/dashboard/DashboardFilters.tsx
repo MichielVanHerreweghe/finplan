@@ -29,10 +29,10 @@ export function DashboardFilters({ filters, onChange }: DashboardFiltersProps) {
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <div className="space-y-1.5">
+      <div className="min-w-[140px] flex-1 space-y-1.5 sm:flex-none">
         <Label htmlFor="filter-type">Type</Label>
         <Select value={filters.type} onValueChange={(v) => set({ type: v })}>
-          <SelectTrigger id="filter-type" className="w-36">
+          <SelectTrigger id="filter-type" className="w-full sm:w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -43,13 +43,13 @@ export function DashboardFilters({ filters, onChange }: DashboardFiltersProps) {
         </Select>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="min-w-[140px] flex-1 space-y-1.5 sm:flex-none">
         <Label htmlFor="filter-category">Category</Label>
         <Select
           value={filters.categoryId}
           onValueChange={(v) => set({ categoryId: v })}
         >
-          <SelectTrigger id="filter-category" className="w-44">
+          <SelectTrigger id="filter-category" className="w-full sm:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

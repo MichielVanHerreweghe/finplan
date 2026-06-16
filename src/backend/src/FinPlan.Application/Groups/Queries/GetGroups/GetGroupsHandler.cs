@@ -1,4 +1,5 @@
 using FinPlan.Application.Common.Messaging;
+using FinPlan.Application.Common.Queries;
 using FinPlan.Application.Groups.Contracts;
 using FinPlan.Domain.Common;
 using FinPlan.Domain.Groups;
@@ -26,9 +27,18 @@ internal sealed class GetGroupsHandler(
         IReadOnlyDictionary<int, User> usersById =
             (await users.GetByIdsAsync(userIds, ct)).ToDictionary(user => user.Id);
 
-        IReadOnlyList<GroupResponse> response = entities
-            .Select(group => group.ToResponse(usersById))
-            .ToList();
+        IEnumerable<GroupResponse> result = entities
+            .Select(group => group.ToResponse(usersById));
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+            result = result.Where(group =>
+                group.Name.Contains(query.Search.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        result = query.Sort == NameSort.NameDesc
+            ? result.OrderByDescending(group => group.Name, StringComparer.OrdinalIgnoreCase)
+            : result.OrderBy(group => group.Name, StringComparer.OrdinalIgnoreCase);
+
+        IReadOnlyList<GroupResponse> response = result.ToList();
 
         return Result.Ok(response);
     }

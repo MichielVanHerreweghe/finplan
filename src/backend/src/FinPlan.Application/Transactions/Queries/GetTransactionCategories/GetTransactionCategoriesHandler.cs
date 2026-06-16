@@ -1,4 +1,5 @@
 using FinPlan.Application.Common.Messaging;
+using FinPlan.Application.Common.Queries;
 using FinPlan.Application.Transactions.Contracts;
 using FinPlan.Domain.Transactions;
 using FluentResults;
@@ -13,7 +14,16 @@ internal sealed class GetTransactionCategoriesHandler(ITransactionCategoryReposi
     {
         IReadOnlyList<TransactionCategory> entities = await categories.GetAsync(ct);
 
-        IReadOnlyList<TransactionCategoryResponse> response = entities
+        IEnumerable<TransactionCategory> filtered = entities;
+        if (!string.IsNullOrWhiteSpace(query.Search))
+            filtered = filtered.Where(category =>
+                category.Name.Contains(query.Search.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        filtered = query.Sort == NameSort.NameDesc
+            ? filtered.OrderByDescending(category => category.Name, StringComparer.OrdinalIgnoreCase)
+            : filtered.OrderBy(category => category.Name, StringComparer.OrdinalIgnoreCase);
+
+        IReadOnlyList<TransactionCategoryResponse> response = filtered
             .Select(category => category.ToResponse())
             .ToList();
 

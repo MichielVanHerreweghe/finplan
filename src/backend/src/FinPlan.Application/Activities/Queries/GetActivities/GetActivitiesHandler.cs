@@ -1,4 +1,5 @@
 using FinPlan.Application.Common.Messaging;
+using FinPlan.Application.Common.Queries;
 using FinPlan.Application.Activities.Contracts;
 using FinPlan.Domain.Common;
 using FinPlan.Domain.Activities;
@@ -26,9 +27,18 @@ internal sealed class GetActivitiesHandler(
 
         // Balances and settlements are only computed for the single-activity view; the list keeps
         // them empty.
-        IReadOnlyList<ActivityResponse> response = entities
-            .Select(activity => activity.ToResponse(usersById, [], []))
-            .ToList();
+        IEnumerable<ActivityResponse> result = entities
+            .Select(activity => activity.ToResponse(usersById, [], []));
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+            result = result.Where(activity =>
+                activity.Name.Contains(query.Search.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        result = query.Sort == NameSort.NameDesc
+            ? result.OrderByDescending(activity => activity.Name, StringComparer.OrdinalIgnoreCase)
+            : result.OrderBy(activity => activity.Name, StringComparer.OrdinalIgnoreCase);
+
+        IReadOnlyList<ActivityResponse> response = result.ToList();
 
         return Result.Ok(response);
     }

@@ -8,8 +8,10 @@ namespace FinPlan.Api.GraphQL.Queries;
 public partial class Query
 {
     public async Task<IReadOnlyList<PocketResponse>> GetPockets(
-        ISender sender, CancellationToken ct) =>
-        (await sender.Send(new GetPocketsQuery(), ct)).Unwrap();
+        ISender sender, CancellationToken ct,
+        string? search = null,
+        PocketSort sort = PocketSort.NameAsc) =>
+        (await sender.Send(new GetPocketsQuery(search, sort), ct)).Unwrap();
 
     public async Task<PocketResponse?> GetPocket(
         int id, ISender sender, CancellationToken ct) =>

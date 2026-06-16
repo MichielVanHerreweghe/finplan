@@ -14,6 +14,11 @@ internal sealed class GetTransactionsHandler(ITransactionRepository transactions
         IReadOnlyList<Transaction> entities = await transactions.GetAsync(ct);
 
         IReadOnlyList<TransactionResponse> response = entities
+            .ApplySearch(query.Search)
+            .ApplyType(query.Type)
+            .ApplyCategory(query.CategoryId, query.Uncategorized)
+            .ApplyDateRange(query.FromDate, query.ToDate)
+            .ApplySort(query.Sort)
             .Select(transaction => transaction.ToResponse())
             .ToList();
 

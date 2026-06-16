@@ -7,17 +7,20 @@ import { App } from "@/App";
 import { OwnerContextProvider } from "@/features/groups/OwnerContext";
 import { userManager } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/lib/theme";
 import "@/index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AuthProvider userManager={userManager}>
-      <OwnerContextProvider>
-        <BrowserRouter>
-          <App />
-          <Toaster richColors position="top-right" />
-        </BrowserRouter>
-      </OwnerContextProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider userManager={userManager}>
+        <OwnerContextProvider>
+          <BrowserRouter>
+            <App />
+            <Toaster richColors position="top-right" />
+          </BrowserRouter>
+        </OwnerContextProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

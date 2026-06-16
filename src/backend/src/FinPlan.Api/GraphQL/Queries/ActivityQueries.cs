@@ -1,4 +1,5 @@
 using FinPlan.Application.Common.Messaging;
+using FinPlan.Application.Common.Queries;
 using FinPlan.Application.Activities.Contracts;
 using FinPlan.Application.Activities.Queries.GetActivity;
 using FinPlan.Application.Activities.Queries.GetActivityExpenses;
@@ -9,8 +10,10 @@ namespace FinPlan.Api.GraphQL.Queries;
 public partial class Query
 {
     public async Task<IReadOnlyList<ActivityResponse>> GetActivities(
-        ISender sender, CancellationToken ct) =>
-        (await sender.Send(new GetActivitiesQuery(), ct)).Unwrap();
+        ISender sender, CancellationToken ct,
+        string? search = null,
+        NameSort sort = NameSort.NameAsc) =>
+        (await sender.Send(new GetActivitiesQuery(search, sort), ct)).Unwrap();
 
     public async Task<ActivityResponse?> GetActivity(
         int id, ISender sender, CancellationToken ct) =>

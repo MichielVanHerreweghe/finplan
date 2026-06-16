@@ -23,9 +23,16 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/page-header";
+import type { TransactionType } from "@/graphql/enums";
 import { computeDashboardStats, type PeriodTotals } from "./stats";
 import { DashboardFilters } from "./DashboardFilters";
-import { applyFilters, defaultFilters, type DashboardFilters as Filters } from "./filters";
+import {
+  ALL,
+  UNCATEGORIZED,
+  defaultFilters,
+  type DashboardFilters as Filters,
+} from "./filters";
 import {
   PERIOD_UNITS,
   periodBuckets,
@@ -46,27 +53,44 @@ const CHART_DESCRIPTION: Record<PeriodUnit, string> = {
 };
 
 export function DashboardPage() {
-  const [{ data, fetching, error }] = useQuery({ query: TransactionsQuery });
   const [unit, setUnit] = useState<PeriodUnit>("month");
   const [anchor, setAnchor] = useState<string>(todayIso());
   const [filters, setFilters] = useState<Filters>(defaultFilters);
 
-  const transactions = useMemo(() => data?.transactions ?? [], [data]);
   const range = useMemo(() => periodRange(unit, anchor), [unit, anchor]);
   const buckets = useMemo(() => periodBuckets(unit, anchor), [unit, anchor]);
 
-  // Scope to the selected period, then apply the type/category filters.
+  // Period scoping + type/category filtering happen server-side via query
+  // variables, so the dashboard refetches as the user navigates periods or
+  // changes filters rather than slicing a full client-side list.
+  const variables = useMemo(
+    () => ({
+      filter: {
+        type: filters.type === ALL ? undefined : (filters.type as TransactionType),
+        categoryId:
+          filters.categoryId === ALL || filters.categoryId === UNCATEGORIZED
+            ? undefined
+            : Number(filters.categoryId),
+        uncategorized: filters.categoryId === UNCATEGORIZED,
+        fromDate: range.start,
+        toDate: range.end,
+      },
+    }),
+    [filters, range],
+  );
+
+  const [{ data, fetching, error }] = useQuery({
+    query: TransactionsQuery,
+    variables,
+  });
+
+  const transactions = useMemo(() => data?.transactions ?? [], [data]);
+
   // Transfers are internal pocket-to-pocket moves, not income or spending, so they
   // are excluded from the income/spending overview entirely.
   const scoped = useMemo(
-    () =>
-      applyFilters(transactions, filters).filter(
-        (tx) =>
-          tx.type !== "TRANSFER" &&
-          tx.date >= range.start &&
-          tx.date <= range.end,
-      ),
-    [transactions, filters, range],
+    () => transactions.filter((tx) => tx.type !== "TRANSFER"),
+    [transactions],
   );
   const stats = useMemo(
     () => computeDashboardStats(scoped, buckets, subGranularity(unit)),
@@ -75,12 +99,10 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          An overview of your income and spending.
-        </p>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        description="An overview of your income and spending."
+      />
 
       {fetching && (
         <p className="py-8 text-center text-muted-foreground">Loading…</p>
@@ -93,7 +115,7 @@ export function DashboardPage() {
 
       {!fetching && !error && (
         <>
-          <div className="space-y-3 rounded-lg border bg-card p-4">
+          <div className="space-y-3 rounded-xl border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <UnitToggle value={unit} onChange={setUnit} />
               <PeriodNav
@@ -110,25 +132,27 @@ export function DashboardPage() {
             <StatCard
               label="Income"
               value={formatCurrency(stats.totalIncome)}
-              icon={<ArrowUpRight className="size-4 text-emerald-600" />}
+              icon={<ArrowUpRight className="size-5" />}
+              iconClassName="bg-success/15 text-success"
             />
             <StatCard
               label="Expenses"
               value={formatCurrency(stats.totalExpense)}
-              icon={<ArrowDownLeft className="size-4 text-amber-600" />}
+              icon={<ArrowDownLeft className="size-5" />}
+              iconClassName="bg-warning/20 text-warning-foreground dark:text-warning"
             />
             <StatCard
               label="Net balance"
               value={formatCurrency(stats.net)}
-              valueClassName={
-                stats.net >= 0 ? "text-emerald-600" : "text-destructive"
-              }
-              icon={<Wallet className="size-4 text-muted-foreground" />}
+              valueClassName={stats.net >= 0 ? "text-success" : "text-destructive"}
+              icon={<Wallet className="size-5" />}
+              iconClassName="bg-primary/10 text-primary"
             />
             <StatCard
               label="Transactions"
               value={String(stats.count)}
-              icon={<Receipt className="size-4 text-muted-foreground" />}
+              icon={<Receipt className="size-5" />}
+              iconClassName="bg-secondary text-muted-foreground"
             />
           </div>
 
@@ -151,18 +175,28 @@ interface StatCardProps {
   label: string;
   value: string;
   icon: React.ReactNode;
+  iconClassName?: string;
   valueClassName?: string;
 }
 
-function StatCard({ label, value, icon, valueClassName }: StatCardProps) {
+function StatCard({ label, value, icon, iconClassName, valueClassName }: StatCardProps) {
   return (
     <Card>
-      <CardContent className="flex items-center justify-between p-6">
-        <div className="space-y-1">
+      <CardContent className="flex items-center justify-between gap-3 p-5">
+        <div className="min-w-0 space-y-1">
           <p className="text-sm text-muted-foreground">{label}</p>
-          <p className={cn("text-2xl font-semibold", valueClassName)}>{value}</p>
+          <p className={cn("truncate text-2xl font-semibold tabular-nums", valueClassName)}>
+            {value}
+          </p>
         </div>
-        {icon}
+        <span
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center rounded-xl",
+            iconClassName,
+          )}
+        >
+          {icon}
+        </span>
       </CardContent>
     </Card>
   );
@@ -256,12 +290,12 @@ function CashFlowChart({
               >
                 <div className="flex h-full w-full items-end justify-center gap-0.5">
                   <div
-                    className="w-1.5 min-w-1.5 flex-1 rounded-t bg-emerald-500"
+                    className="w-1.5 min-w-1.5 flex-1 rounded-t bg-success"
                     style={{ height: `${(p.income / max) * 100}%` }}
                     title={`${p.label} · Income: ${formatCurrency(p.income)}`}
                   />
                   <div
-                    className="w-1.5 min-w-1.5 flex-1 rounded-t bg-amber-500"
+                    className="w-1.5 min-w-1.5 flex-1 rounded-t bg-warning"
                     style={{ height: `${(p.expense / max) * 100}%` }}
                     title={`${p.label} · Expenses: ${formatCurrency(p.expense)}`}
                   />
@@ -275,10 +309,10 @@ function CashFlowChart({
         )}
         <div className="mt-4 flex justify-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-emerald-500" /> Income
+            <span className="size-2.5 rounded-full bg-success" /> Income
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-amber-500" /> Expenses
+            <span className="size-2.5 rounded-full bg-warning" /> Expenses
           </span>
         </div>
       </CardContent>
@@ -312,7 +346,7 @@ function TopCategories({
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
                   <div
-                    className="h-full rounded-full bg-amber-500"
+                    className="h-full rounded-full bg-warning"
                     style={{ width: `${(c.amount / max) * 100}%` }}
                   />
                 </div>
@@ -362,8 +396,8 @@ function PeriodTransactions({
                 </div>
                 <span
                   className={cn(
-                    "text-sm font-medium",
-                    tx.type === "INCOME" && "text-emerald-600",
+                    "text-sm font-medium tabular-nums",
+                    tx.type === "INCOME" && "text-success",
                   )}
                 >
                   {tx.type === "INCOME" ? "+" : "-"}

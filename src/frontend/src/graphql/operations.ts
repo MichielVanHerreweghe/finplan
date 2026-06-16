@@ -22,16 +22,26 @@ export const TransactionFields = graphql(`
 `);
 
 export const TransactionsQuery = graphql(`
-  query Transactions {
-    transactions {
+  query Transactions($filter: TransactionFilterInput, $sort: TransactionSort) {
+    transactions(filter: $filter, sort: $sort) {
       ...TransactionFields
     }
   }
 `);
 
 export const TransactionsByPocketQuery = graphql(`
-  query TransactionsByPocket($pocketId: Int!) {
-    transactionsByPocket(pocketId: $pocketId) {
+  query TransactionsByPocket(
+    $pocketId: Int!
+    $search: String
+    $type: TransactionType
+    $sort: TransactionSort
+  ) {
+    transactionsByPocket(
+      pocketId: $pocketId
+      search: $search
+      type: $type
+      sort: $sort
+    ) {
       ...TransactionFields
     }
   }
@@ -46,8 +56,8 @@ export const TransactionsBySavingGoalQuery = graphql(`
 `);
 
 export const CategoriesQuery = graphql(`
-  query TransactionCategories {
-    transactionCategories {
+  query TransactionCategories($search: String, $sort: NameSort) {
+    transactionCategories(search: $search, sort: $sort) {
       id
       name
     }
@@ -150,8 +160,12 @@ export const SavingGoalFields = graphql(`
 `);
 
 export const SavingGoalsQuery = graphql(`
-  query SavingGoals {
-    savingGoals {
+  query SavingGoals(
+    $search: String
+    $status: SavingGoalStatus
+    $sort: SavingGoalSort
+  ) {
+    savingGoals(search: $search, status: $status, sort: $sort) {
       ...SavingGoalFields
     }
   }
@@ -208,8 +222,8 @@ export const PocketFields = graphql(`
 `);
 
 export const PocketsQuery = graphql(`
-  query Pockets {
-    pockets {
+  query Pockets($search: String, $sort: PocketSort) {
+    pockets(search: $search, sort: $sort) {
       ...PocketFields
     }
   }
@@ -295,8 +309,8 @@ export const ActivityExpenseFields = graphql(`
 `);
 
 export const ActivitiesQuery = graphql(`
-  query Activities {
-    activities {
+  query Activities($search: String, $sort: NameSort) {
+    activities(search: $search, sort: $sort) {
       ...ActivityFields
     }
   }
@@ -422,8 +436,8 @@ export const GroupFields = graphql(`
 `);
 
 export const GroupsQuery = graphql(`
-  query Groups {
-    groups {
+  query Groups($search: String, $sort: NameSort) {
+    groups(search: $search, sort: $sort) {
       ...GroupFields
     }
   }
