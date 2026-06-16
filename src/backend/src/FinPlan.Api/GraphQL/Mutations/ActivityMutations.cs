@@ -1,6 +1,5 @@
 using FinPlan.Api.GraphQL.Errors;
 using FinPlan.Application.Common.Messaging;
-using FinPlan.Application.Activities.Commands.AddActivityMember;
 using FinPlan.Application.Activities.Commands.CreateActivity;
 using FinPlan.Application.Activities.Commands.CreateActivityExpense;
 using FinPlan.Application.Activities.Commands.DeleteActivity;
@@ -18,11 +17,6 @@ public partial class Mutation
     public async Task<int> CreateActivity(
         CreateActivityInput input, ISender sender, CancellationToken ct) =>
         (await sender.Send(new CreateActivityCommand(input.Name, input.Description), ct)).Unwrap();
-
-    [Error<RequestException>]
-    public async Task<bool> AddActivityMember(
-        AddActivityMemberInput input, ISender sender, CancellationToken ct) =>
-        (await sender.Send(new AddActivityMemberCommand(input.ActivityId, input.Email), ct)).Unwrap();
 
     [Error<RequestException>]
     public async Task<bool> RemoveActivityMember(

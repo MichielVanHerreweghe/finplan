@@ -25,4 +25,9 @@ internal sealed class ActivityRepository : Repository<Activity>, IActivityReposi
             .Include(activity => activity.Members)
             .FirstOrDefaultAsync(
                 activity => activity.Id == id && activity.Members.Any(member => member.UserId == userId), ct);
+
+    public Task<Activity?> GetByIdWithMembersAsync(int id, CancellationToken ct = default) =>
+        Set
+            .Include(activity => activity.Members)
+            .FirstOrDefaultAsync(activity => activity.Id == id, ct);
 }

@@ -1,4 +1,5 @@
 using FinPlan.Domain.Activities;
+using FinPlan.Domain.Splitting;
 
 namespace FinPlan.Application.Activities.Contracts;
 

@@ -1,6 +1,7 @@
 using FinPlan.Application.Common.Messaging;
 using FinPlan.Domain.Common;
 using FinPlan.Domain.Activities;
+using FinPlan.Domain.Splitting;
 using FluentResults;
 
 namespace FinPlan.Application.Activities.Commands.CreateActivityExpense;

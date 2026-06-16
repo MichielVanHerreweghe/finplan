@@ -278,6 +278,7 @@ export const ActivityFields = graphql(`
       userId
       displayName
       email
+      pending
     }
     balances {
       userId
@@ -358,19 +359,6 @@ export const DeleteActivityMutation = graphql(`
   }
 `);
 
-export const AddActivityMemberMutation = graphql(`
-  mutation AddActivityMember($input: AddActivityMemberInput!) {
-    addActivityMember(input: $input) {
-      boolean
-      errors {
-        ... on RequestError {
-          message
-        }
-      }
-    }
-  }
-`);
-
 export const RemoveActivityMemberMutation = graphql(`
   mutation RemoveActivityMember($input: RemoveActivityMemberInput!) {
     removeActivityMember(input: $input) {
@@ -431,6 +419,7 @@ export const GroupFields = graphql(`
       userId
       displayName
       email
+      pending
     }
   }
 `);
@@ -447,19 +436,6 @@ export const CreateGroupMutation = graphql(`
   mutation CreateGroup($input: CreateGroupInput!) {
     createGroup(input: $input) {
       ownerId
-      errors {
-        ... on RequestError {
-          message
-        }
-      }
-    }
-  }
-`);
-
-export const AddGroupMemberMutation = graphql(`
-  mutation AddGroupMember($input: AddGroupMemberInput!) {
-    addGroupMember(input: $input) {
-      boolean
       errors {
         ... on RequestError {
           message
@@ -498,6 +474,224 @@ export const LeaveGroupMutation = graphql(`
 export const DeleteGroupMutation = graphql(`
   mutation DeleteGroup($input: DeleteGroupInput!) {
     deleteGroup(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const MeQuery = graphql(`
+  query Me {
+    me {
+      id
+      email
+      displayName
+      firstName
+      lastName
+      profileCompleted
+    }
+  }
+`);
+
+export const CompleteProfileMutation = graphql(`
+  mutation CompleteProfile($input: CompleteProfileInput!) {
+    completeProfile(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const ContactFields = graphql(`
+  fragment ContactFields on ContactResponse {
+    id
+    userId
+    displayName
+    firstName
+    lastName
+    email
+    net
+  }
+`);
+
+export const ContactsQuery = graphql(`
+  query Contacts($search: String, $sort: NameSort) {
+    contacts(search: $search, sort: $sort) {
+      ...ContactFields
+    }
+  }
+`);
+
+export const RemoveContactMutation = graphql(`
+  mutation RemoveContact($input: RemoveContactInput!) {
+    removeContact(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const ContactExpenseFields = graphql(`
+  fragment ContactExpenseFields on ContactExpenseResponse {
+    id
+    description
+    date
+    amount
+    paidByUserId
+    splitType
+    splits {
+      userId
+      amount
+      percentage
+    }
+  }
+`);
+
+export const ContactSettlementFields = graphql(`
+  fragment ContactSettlementFields on ContactSettlementResponse {
+    id
+    fromUserId
+    toUserId
+    amount
+    date
+  }
+`);
+
+export const ContactLedgerQuery = graphql(`
+  query ContactLedger($contactId: Int!) {
+    contactLedger(contactId: $contactId) {
+      contactId
+      userId
+      displayName
+      firstName
+      lastName
+      email
+      net
+      expenses {
+        ...ContactExpenseFields
+      }
+      settlements {
+        ...ContactSettlementFields
+      }
+    }
+  }
+`);
+
+export const CreateContactExpenseMutation = graphql(`
+  mutation CreateContactExpense($input: CreateContactExpenseInput!) {
+    createContactExpense(input: $input) {
+      id
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const DeleteContactExpenseMutation = graphql(`
+  mutation DeleteContactExpense($input: DeleteContactExpenseInput!) {
+    deleteContactExpense(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const RecordContactSettlementMutation = graphql(`
+  mutation RecordContactSettlement($input: RecordContactSettlementInput!) {
+    recordContactSettlement(input: $input) {
+      id
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const DeleteContactSettlementMutation = graphql(`
+  mutation DeleteContactSettlement($input: DeleteContactSettlementInput!) {
+    deleteContactSettlement(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const InvitationFields = graphql(`
+  fragment InvitationFields on InvitationResponse {
+    id
+    type
+    direction
+    otherUserId
+    otherDisplayName
+    otherEmail
+    targetId
+    targetName
+    createdAt
+  }
+`);
+
+export const MyInvitationsQuery = graphql(`
+  query MyInvitations {
+    myInvitations {
+      ...InvitationFields
+    }
+  }
+`);
+
+export const SendInvitationMutation = graphql(`
+  mutation SendInvitation($input: SendInvitationInput!) {
+    sendInvitation(input: $input) {
+      invitationId
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const AcceptInvitationMutation = graphql(`
+  mutation AcceptInvitation($input: AcceptInvitationInput!) {
+    acceptInvitation(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const DeclineInvitationMutation = graphql(`
+  mutation DeclineInvitation($input: DeclineInvitationInput!) {
+    declineInvitation(input: $input) {
       boolean
       errors {
         ... on RequestError {

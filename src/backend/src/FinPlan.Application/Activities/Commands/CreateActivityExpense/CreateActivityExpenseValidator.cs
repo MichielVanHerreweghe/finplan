@@ -1,4 +1,4 @@
-using FinPlan.Domain.Activities;
+using FinPlan.Domain.Splitting;
 using FluentValidation;
 
 namespace FinPlan.Application.Activities.Commands.CreateActivityExpense;

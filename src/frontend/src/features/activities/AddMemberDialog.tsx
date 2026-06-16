@@ -5,11 +5,13 @@ import { z } from "zod";
 import { useMutation } from "urql";
 import { toast } from "sonner";
 
-import { AddActivityMemberMutation } from "@/graphql/operations";
+import { SendInvitationMutation } from "@/graphql/operations";
 import { payloadErrorMessage } from "@/lib/graphql-error";
+import { useContacts } from "@/features/contacts/useContacts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ContactPicker } from "@/features/contacts/ContactPicker";
 import {
   Dialog,
   DialogContent,
@@ -32,12 +34,14 @@ interface AddMemberDialogProps {
 }
 
 export function AddMemberDialog({ open, onOpenChange, activityId, onSaved }: AddMemberDialogProps) {
-  const [, addMember] = useMutation(AddActivityMemberMutation);
+  const [, sendInvitation] = useMutation(SendInvitationMutation);
+  const { contacts } = useContacts();
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -50,11 +54,13 @@ export function AddMemberDialog({ open, onOpenChange, activityId, onSaved }: Add
   }, [open, reset]);
 
   async function onSubmit(values: FormValues) {
-    const result = await addMember({ input: { activityId, email: values.email.trim() } });
+    const result = await sendInvitation({
+      input: { type: "ACTIVITY_MEMBER", email: values.email.trim(), targetId: activityId },
+    });
     if (result.error) return toast.error(result.error.message);
-    const msg = payloadErrorMessage(result.data?.addActivityMember.errors);
+    const msg = payloadErrorMessage(result.data?.sendInvitation.errors);
     if (msg) return toast.error(msg);
-    toast.success("Member added");
+    toast.success("Request sent");
     onOpenChange(false);
     onSaved();
   }
@@ -63,9 +69,15 @@ export function AddMemberDialog({ open, onOpenChange, activityId, onSaved }: Add
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add member</DialogTitle>
+          <DialogTitle>Invite member</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {contacts.length > 0 && (
+            <ContactPicker
+              contacts={contacts}
+              onSelect={(email) => setValue("email", email, { shouldValidate: true })}
+            />
+          )}
           <div className="space-y-2">
             <Label htmlFor="member-email">Email</Label>
             <Input
@@ -79,7 +91,7 @@ export function AddMemberDialog({ open, onOpenChange, activityId, onSaved }: Add
               <p className="text-sm text-destructive">{errors.email.message}</p>
             )}
             <p className="text-xs text-muted-foreground">
-              They must have signed in to FinPlan at least once.
+              They must have signed in to FinPlan at least once, and will need to accept your invite.
             </p>
           </div>
 
@@ -88,7 +100,7 @@ export function AddMemberDialog({ open, onOpenChange, activityId, onSaved }: Add
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Adding…" : "Add"}
+              {isSubmitting ? "Sending…" : "Send invite"}
             </Button>
           </DialogFooter>
         </form>
