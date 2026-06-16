@@ -1,6 +1,7 @@
 using System.Reflection;
 using FinPlan.Domain.Activities;
 using FinPlan.Domain.Common;
+using FinPlan.Domain.Groups;
 using FinPlan.Domain.Pockets;
 using FinPlan.Domain.SavingGoals;
 using FinPlan.Domain.Transactions;
@@ -22,6 +23,8 @@ public sealed class ApplicationDbContext : DbContext, IUnitOfWork
     public DbSet<User> Users => Set<User>();
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<ActivityExpense> ActivityExpenses => Set<ActivityExpense>();
+    public DbSet<Owner> Owners => Set<Owner>();
+    public DbSet<Group> Groups => Set<Group>();
 
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,

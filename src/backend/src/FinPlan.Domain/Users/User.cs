@@ -15,6 +15,13 @@ public sealed class User : Entity, IAggregateRoot
     public string? Email { get; private set; }
     public string? DisplayName { get; private set; }
 
+    // The user's personal owner (Kind=Personal): the owner all their private finances belong to,
+    // and their default active context. Created together with the user; EF stamps OwnerId from
+    // the navigation on insert. Set in the factory, not the constructor — EF binds only mapped
+    // scalars to constructor parameters, so the materialization ctor stays scalar-only.
+    public int OwnerId { get; private set; }
+    public Owner Owner { get; private set; } = null!;
+
     private User(string issuer, string externalSubject, string? email, string? displayName)
     {
         Issuer = issuer;
@@ -30,7 +37,7 @@ public sealed class User : Entity, IAggregateRoot
         if (validationResult.IsFailed)
             return validationResult;
 
-        return new User(issuer, externalSubject, email, displayName);
+        return new User(issuer, externalSubject, email, displayName) { Owner = Owner.Personal() };
     }
 
     // Refreshed from token claims on login; the (Issuer, ExternalSubject) identity never changes here.

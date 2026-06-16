@@ -23,11 +23,12 @@ internal sealed class GetActivityHandler(
 
         IReadOnlyList<ActivityExpense> activityExpenses = await expenses.GetByActivityAsync(activity.Id, ct);
         IReadOnlyList<ActivityBalanceResponse> balances = ActivityBalances.Compute(activity, activityExpenses);
+        IReadOnlyList<ActivitySettlementResponse> settlements = ActivitySettlements.Compute(balances);
 
         int[] userIds = activity.Members.Select(member => member.UserId).ToArray();
         IReadOnlyDictionary<int, User> usersById =
             (await users.GetByIdsAsync(userIds, ct)).ToDictionary(user => user.Id);
 
-        return Result.Ok(activity.ToResponse(usersById, balances));
+        return Result.Ok(activity.ToResponse(usersById, balances, settlements));
     }
 }

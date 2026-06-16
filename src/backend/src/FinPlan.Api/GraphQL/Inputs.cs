@@ -74,3 +74,9 @@ public sealed record CreateActivityExpenseInput(
     IReadOnlyList<SplitInput> Splits);
 
 public sealed record SplitInput(int UserId, decimal? ExactAmount, decimal? Percentage);
+
+public sealed record CreateGroupInput(string Name, string? Description);
+
+public sealed record AddGroupMemberInput(int GroupId, string Email);
+
+public sealed record RemoveGroupMemberInput(int GroupId, int UserId);

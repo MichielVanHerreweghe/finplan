@@ -24,9 +24,10 @@ internal sealed class GetActivitiesHandler(
         IReadOnlyDictionary<int, User> usersById =
             (await users.GetByIdsAsync(userIds, ct)).ToDictionary(user => user.Id);
 
-        // Balances are only computed for the single-activity view; the list keeps them empty.
+        // Balances and settlements are only computed for the single-activity view; the list keeps
+        // them empty.
         IReadOnlyList<ActivityResponse> response = entities
-            .Select(activity => activity.ToResponse(usersById, []))
+            .Select(activity => activity.ToResponse(usersById, [], []))
             .ToList();
 
         return Result.Ok(response);

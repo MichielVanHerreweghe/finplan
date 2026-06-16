@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import { useMutation } from "urql";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, Trash2, UserPlus, X } from "lucide-react";
 
 import {
   DeleteActivityExpenseMutation,
@@ -173,6 +173,36 @@ export function ActivityDetailPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Settle up — the fewest transfers needed to clear every balance */}
+      {activity && activity.balances.length > 0 && (
+        <Card>
+          <CardContent className="space-y-3 p-6">
+            <h2 className="text-sm font-medium text-muted-foreground">Settle up</h2>
+            {activity.settlements.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Everyone is settled up.</p>
+            ) : (
+              <ul className="space-y-1">
+                {activity.settlements.map((settlement) => (
+                  <li
+                    key={`${settlement.fromUserId}-${settlement.toUserId}`}
+                    className="flex items-center justify-between gap-2 text-sm"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="truncate font-medium">{nameOf(settlement.fromUserId)}</span>
+                      <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="truncate font-medium">{nameOf(settlement.toUserId)}</span>
+                    </span>
+                    <span className="tabular-nums font-medium">
+                      {formatCurrency(settlement.amount)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Expenses */}

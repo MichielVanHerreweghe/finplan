@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   LogOut,
   PiggyBank,
+  Receipt,
   Tags,
   Users,
   Wallet,
@@ -21,6 +22,8 @@ import { PocketsPage } from "@/features/pockets/PocketsPage";
 import { PocketDetailPage } from "@/features/pockets/PocketDetailPage";
 import { ActivitiesPage } from "@/features/activities/ActivitiesPage";
 import { ActivityDetailPage } from "@/features/activities/ActivityDetailPage";
+import { GroupsPage } from "@/features/groups/GroupsPage";
+import { ContextSwitcher } from "@/features/groups/ContextSwitcher";
 import { RequireAuth } from "@/features/auth/RequireAuth";
 import { CallbackPage } from "@/features/auth/CallbackPage";
 
@@ -30,7 +33,8 @@ const navItems = [
   { to: "/pockets", label: "Pockets", icon: Wallet2 },
   { to: "/categories", label: "Categories", icon: Tags },
   { to: "/saving-goals", label: "Saving Goals", icon: PiggyBank },
-  { to: "/activities", label: "Activities", icon: Users },
+  { to: "/activities", label: "Activities", icon: Receipt },
+  { to: "/groups", label: "Groups", icon: Users },
 ];
 
 export function App() {
@@ -53,6 +57,7 @@ export function App() {
         <Route path="/saving-goals" element={<SavingGoalsPage />} />
         <Route path="/activities" element={<ActivitiesPage />} />
         <Route path="/activities/:id" element={<ActivityDetailPage />} />
+        <Route path="/groups" element={<GroupsPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>
@@ -70,6 +75,9 @@ function AppLayout() {
         <div className="flex h-14 items-center gap-2 border-b px-6 font-semibold">
           <Wallet className="size-5" />
           FinPlan
+        </div>
+        <div className="border-b p-3">
+          <ContextSwitcher />
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-3">
           {navItems.map(({ to, label, icon: Icon }) => (

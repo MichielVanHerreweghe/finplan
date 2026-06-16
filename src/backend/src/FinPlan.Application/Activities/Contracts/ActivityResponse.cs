@@ -9,7 +9,8 @@ public sealed record ActivityResponse(
     string? Description,
     int CreatedByUserId,
     IReadOnlyList<ActivityMemberResponse> Members,
-    IReadOnlyList<ActivityBalanceResponse> Balances);
+    IReadOnlyList<ActivityBalanceResponse> Balances,
+    IReadOnlyList<ActivitySettlementResponse> Settlements);
 
 public sealed record ActivityMemberResponse(int UserId, string? DisplayName, string? Email);
 
@@ -17,12 +18,18 @@ public sealed record ActivityMemberResponse(int UserId, string? DisplayName, str
 // they owe the activity. Empty on the list view; populated on the single-activity view.
 public sealed record ActivityBalanceResponse(int UserId, decimal Net);
 
+// A single transfer needed to settle up: FromUserId should pay ToUserId the given amount. The set
+// is computed to keep the number of transfers minimal. Empty on the list view; populated on the
+// single-activity view.
+public sealed record ActivitySettlementResponse(int FromUserId, int ToUserId, decimal Amount);
+
 internal static class ActivityMapping
 {
     public static ActivityResponse ToResponse(
         this Activity activity,
         IReadOnlyDictionary<int, User> usersById,
-        IReadOnlyList<ActivityBalanceResponse> balances)
+        IReadOnlyList<ActivityBalanceResponse> balances,
+        IReadOnlyList<ActivitySettlementResponse> settlements)
     {
         IReadOnlyList<ActivityMemberResponse> members = activity.Members
             .Select(member =>
@@ -33,6 +40,7 @@ internal static class ActivityMapping
             .ToList();
 
         return new ActivityResponse(
-            activity.Id, activity.Name, activity.Description, activity.CreatedByUserId, members, balances);
+            activity.Id, activity.Name, activity.Description, activity.CreatedByUserId,
+            members, balances, settlements);
     }
 }

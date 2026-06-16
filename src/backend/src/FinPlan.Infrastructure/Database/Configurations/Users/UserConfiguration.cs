@@ -14,5 +14,13 @@ internal sealed class UserConfiguration : EntityConfiguration<User>
         builder.HasIndex(x => new { x.Issuer, x.ExternalSubject })
             .IsUnique()
             .HasFilter("\"DeletedAt\" IS NULL");
+
+        // The user's personal owner, created together with the user. Restrict: the owner can't
+        // be deleted while the user (or any of their data) references it.
+        builder.HasIndex(x => x.OwnerId).IsUnique();
+        builder.HasOne(x => x.Owner)
+            .WithMany()
+            .HasForeignKey(x => x.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
