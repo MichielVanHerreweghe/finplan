@@ -36,7 +36,7 @@ export function PocketTransactionActions({
             onClick={() => setPreset(moneyIn)}
             aria-label="Add money to pocket"
           >
-            <ArrowDownLeft className="text-emerald-600" />
+            <ArrowDownLeft className="text-success" />
           </Button>
           <Button
             variant="ghost"

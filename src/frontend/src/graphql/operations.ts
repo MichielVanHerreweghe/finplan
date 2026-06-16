@@ -22,16 +22,26 @@ export const TransactionFields = graphql(`
 `);
 
 export const TransactionsQuery = graphql(`
-  query Transactions {
-    transactions {
+  query Transactions($filter: TransactionFilterInput, $sort: TransactionSort) {
+    transactions(filter: $filter, sort: $sort) {
       ...TransactionFields
     }
   }
 `);
 
 export const TransactionsByPocketQuery = graphql(`
-  query TransactionsByPocket($pocketId: Int!) {
-    transactionsByPocket(pocketId: $pocketId) {
+  query TransactionsByPocket(
+    $pocketId: Int!
+    $search: String
+    $type: TransactionType
+    $sort: TransactionSort
+  ) {
+    transactionsByPocket(
+      pocketId: $pocketId
+      search: $search
+      type: $type
+      sort: $sort
+    ) {
       ...TransactionFields
     }
   }
@@ -46,8 +56,8 @@ export const TransactionsBySavingGoalQuery = graphql(`
 `);
 
 export const CategoriesQuery = graphql(`
-  query TransactionCategories {
-    transactionCategories {
+  query TransactionCategories($search: String, $sort: NameSort) {
+    transactionCategories(search: $search, sort: $sort) {
       id
       name
     }
@@ -150,8 +160,12 @@ export const SavingGoalFields = graphql(`
 `);
 
 export const SavingGoalsQuery = graphql(`
-  query SavingGoals {
-    savingGoals {
+  query SavingGoals(
+    $search: String
+    $status: SavingGoalStatus
+    $sort: SavingGoalSort
+  ) {
+    savingGoals(search: $search, status: $status, sort: $sort) {
       ...SavingGoalFields
     }
   }
@@ -208,8 +222,8 @@ export const PocketFields = graphql(`
 `);
 
 export const PocketsQuery = graphql(`
-  query Pockets {
-    pockets {
+  query Pockets($search: String, $sort: PocketSort) {
+    pockets(search: $search, sort: $sort) {
       ...PocketFields
     }
   }
@@ -254,6 +268,148 @@ export const DeletePocketMutation = graphql(`
   }
 `);
 
+export const ActivityFields = graphql(`
+  fragment ActivityFields on ActivityResponse {
+    id
+    name
+    description
+    createdByUserId
+    members {
+      userId
+      displayName
+      email
+    }
+    balances {
+      userId
+      net
+    }
+    settlements {
+      fromUserId
+      toUserId
+      amount
+    }
+  }
+`);
+
+export const ActivityExpenseFields = graphql(`
+  fragment ActivityExpenseFields on ActivityExpenseResponse {
+    id
+    activityId
+    description
+    date
+    amount
+    paidByUserId
+    splitType
+    splits {
+      userId
+      amount
+      percentage
+    }
+  }
+`);
+
+export const ActivitiesQuery = graphql(`
+  query Activities($search: String, $sort: NameSort) {
+    activities(search: $search, sort: $sort) {
+      ...ActivityFields
+    }
+  }
+`);
+
+export const ActivityQuery = graphql(`
+  query Activity($id: Int!) {
+    activity(id: $id) {
+      ...ActivityFields
+    }
+  }
+`);
+
+export const ActivityExpensesQuery = graphql(`
+  query ActivityExpenses($activityId: Int!) {
+    activityExpenses(activityId: $activityId) {
+      ...ActivityExpenseFields
+    }
+  }
+`);
+
+export const CreateActivityMutation = graphql(`
+  mutation CreateActivity($input: CreateActivityInput!) {
+    createActivity(input: $input) {
+      id
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const DeleteActivityMutation = graphql(`
+  mutation DeleteActivity($input: DeleteActivityInput!) {
+    deleteActivity(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const AddActivityMemberMutation = graphql(`
+  mutation AddActivityMember($input: AddActivityMemberInput!) {
+    addActivityMember(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const RemoveActivityMemberMutation = graphql(`
+  mutation RemoveActivityMember($input: RemoveActivityMemberInput!) {
+    removeActivityMember(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const CreateActivityExpenseMutation = graphql(`
+  mutation CreateActivityExpense($input: CreateActivityExpenseInput!) {
+    createActivityExpense(input: $input) {
+      id
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
+export const DeleteActivityExpenseMutation = graphql(`
+  mutation DeleteActivityExpense($input: DeleteActivityExpenseInput!) {
+    deleteActivityExpense(input: $input) {
+      boolean
+      errors {
+        ... on RequestError {
+          message
+        }
+      }
+    }
+  }
+`);
+
 export const MyContextsQuery = graphql(`
   query MyContexts {
     myContexts {
@@ -280,8 +436,8 @@ export const GroupFields = graphql(`
 `);
 
 export const GroupsQuery = graphql(`
-  query Groups {
-    groups {
+  query Groups($search: String, $sort: NameSort) {
+    groups(search: $search, sort: $sort) {
       ...GroupFields
     }
   }

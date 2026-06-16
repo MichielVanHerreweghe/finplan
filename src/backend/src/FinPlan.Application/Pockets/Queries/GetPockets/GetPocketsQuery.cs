@@ -4,4 +4,7 @@ using FluentResults;
 
 namespace FinPlan.Application.Pockets.Queries.GetPockets;
 
-public sealed record GetPocketsQuery : IQuery<Result<IReadOnlyList<PocketResponse>>>;
+public sealed record GetPocketsQuery(
+    string? Search = null,
+    PocketSort Sort = PocketSort.NameAsc)
+    : IQuery<Result<IReadOnlyList<PocketResponse>>>;

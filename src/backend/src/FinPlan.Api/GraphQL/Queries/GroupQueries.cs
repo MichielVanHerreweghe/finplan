@@ -1,4 +1,5 @@
 using FinPlan.Application.Common.Messaging;
+using FinPlan.Application.Common.Queries;
 using FinPlan.Application.Groups.Contracts;
 using FinPlan.Application.Groups.Queries.GetGroups;
 using FinPlan.Application.Groups.Queries.GetMyContexts;
@@ -14,6 +15,8 @@ public partial class Query
 
     // The current user's groups with members, for the management page.
     public async Task<IReadOnlyList<GroupResponse>> GetGroups(
-        ISender sender, CancellationToken ct) =>
-        (await sender.Send(new GetGroupsQuery(), ct)).Unwrap();
+        ISender sender, CancellationToken ct,
+        string? search = null,
+        NameSort sort = NameSort.NameAsc) =>
+        (await sender.Send(new GetGroupsQuery(search, sort), ct)).Unwrap();
 }

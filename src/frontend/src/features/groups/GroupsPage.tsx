@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import { useMutation } from "urql";
 import { toast } from "sonner";
@@ -10,9 +10,13 @@ import {
   RemoveGroupMemberMutation,
 } from "@/graphql/operations";
 import type { GroupFieldsFragment } from "@/gql/graphql";
+import type { NameSort } from "@/graphql/enums";
 import { combinedErrorMessage, payloadErrorMessage } from "@/lib/graphql-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { SearchInput } from "@/components/search-input";
+import { SortSelect } from "@/components/sort-select";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useGroups } from "./useGroups";
 import { useOwnerContext } from "./OwnerContext";
@@ -30,8 +34,20 @@ type ConfirmAction =
 const memberLabel = (member: GroupMember) =>
   member.displayName ?? member.email ?? `User #${member.userId}`;
 
+const SORT_OPTIONS: { value: NameSort; label: string }[] = [
+  { value: "NAME_ASC", label: "Name (A–Z)" },
+  { value: "NAME_DESC", label: "Name (Z–A)" },
+];
+
 export function GroupsPage() {
-  const { groups, fetching, error, refetch } = useGroups();
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<NameSort>("NAME_ASC");
+  const variables = useMemo(
+    () => ({ search: search || undefined, sort }),
+    [search, sort],
+  );
+
+  const { groups, fetching, error, refetch } = useGroups(variables);
   const { activeOwnerId, setActiveOwner, refetchContexts } = useOwnerContext();
   const auth = useAuth();
   const currentEmail = auth.user?.profile?.email;
@@ -99,16 +115,24 @@ export function GroupsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Groups</h1>
-          <p className="text-sm text-muted-foreground">
-            Shared accounts. Switch into a group from the context picker to manage its finances.
-          </p>
-        </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus /> New group
-        </Button>
+      <PageHeader
+        title="Groups"
+        description="Shared accounts. Switch into a group from the context picker to manage its finances."
+        action={
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus /> New group
+          </Button>
+        }
+      />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search groups…"
+          className="sm:max-w-xs"
+        />
+        <SortSelect value={sort} onChange={setSort} options={SORT_OPTIONS} />
       </div>
 
       {fetching && <p className="py-8 text-center text-muted-foreground">Loading…</p>}
@@ -116,7 +140,9 @@ export function GroupsPage() {
         <p className="py-8 text-center text-destructive">{combinedErrorMessage(error)}</p>
       )}
       {!fetching && !error && groups.length === 0 && (
-        <p className="py-8 text-center text-muted-foreground">No groups yet.</p>
+        <p className="py-8 text-center text-muted-foreground">
+          {search ? "No groups match your search." : "No groups yet."}
+        </p>
       )}
 
       {!fetching && !error && groups.length > 0 && (
@@ -126,20 +152,22 @@ export function GroupsPage() {
             const isCreator = me?.userId === group.createdByUserId;
             return (
               <Card key={group.id}>
-                <CardContent className="space-y-4 p-6">
-                  <div className="flex items-start justify-between gap-4">
+                <CardContent className="space-y-4 p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="space-y-1">
                       <h3 className="font-semibold">
                         {group.name}
                         {activeOwnerId === group.ownerId && (
-                          <span className="ml-2 text-xs font-normal text-primary">active</span>
+                          <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                            active
+                          </span>
                         )}
                       </h3>
                       {group.description && (
                         <p className="text-sm text-muted-foreground">{group.description}</p>
                       )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {activeOwnerId !== group.ownerId && (
                         <Button variant="outline" size="sm" onClick={() => setActiveOwner(group.ownerId)}>
                           Switch to
