@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths:
-      - "deploy/helm/**"
+      - "charts/**"
       - ".github/workflows/charts-ci.yml"
   pull_request:
     paths:
-      - "deploy/helm/**"
+      - "charts/**"
       - ".github/workflows/charts-ci.yml"
 
 permissions:
@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CHART_DIR: deploy/helm/finplan
+  CHART_DIR: charts/finplan
 
 jobs:
   lint-and-template:

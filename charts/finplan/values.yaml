@@ -1,5 +1,5 @@
 # Default values for the FinPlan chart.
-# See deploy/README.md for prerequisites (CloudNativePG, Envoy Gateway, cert-manager, Cilium).
+# See charts/README.md for prerequisites (CloudNativePG, Envoy Gateway, cert-manager, Cilium).
 
 # -- Override the chart name used in resource names.
 nameOverride: ""

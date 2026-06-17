@@ -22,8 +22,8 @@ jobs:
       backend_version: ${{ steps.release.outputs['src/backend--version'] }}
       frontend_released: ${{ steps.release.outputs['src/frontend--release_created'] }}
       frontend_version: ${{ steps.release.outputs['src/frontend--version'] }}
-      chart_released: ${{ steps.release.outputs['deploy/helm/finplan--release_created'] }}
-      chart_version: ${{ steps.release.outputs['deploy/helm/finplan--version'] }}
+      chart_released: ${{ steps.release.outputs['charts/finplan--release_created'] }}
+      chart_version: ${{ steps.release.outputs['charts/finplan--version'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -134,6 +134,6 @@ jobs:
           helm registry login ghcr.io \
             --username "${{ github.actor }}" \
             --password "${{ secrets.GITHUB_TOKEN }}"
-          helm package deploy/helm/finplan --version "${{ needs.release-please.outputs.chart_version }}"
+          helm package charts/finplan --version "${{ needs.release-please.outputs.chart_version }}"
           helm push "finplan-${{ needs.release-please.outputs.chart_version }}.tgz" \
             "oci://ghcr.io/${{ steps.owner.outputs.value }}/charts"

@@ -25,6 +25,6 @@ maintainers:
 # This chart renders CloudNativePG (postgresql.cnpg.io), Gateway API (gateway.networking.k8s.io),
 # cert-manager (cert-manager.io) and Cilium (cilium.io) custom resources. Those CRDs/operators
 # must already be installed in the cluster — they are intentionally NOT bundled as dependencies
-# so the chart stays decoupled from operator lifecycle/versioning. See deploy/README.md.
+# so the chart stays decoupled from operator lifecycle/versioning. See charts/README.md.
 annotations:
   category: Finance

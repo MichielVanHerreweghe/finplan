@@ -1,6 +1,6 @@
 # Deploying FinPlan
 
-The [`helm/finplan`](helm/finplan) chart deploys the full stack:
+The [`finplan`](finplan) chart deploys the full stack:
 
 | Component | Workload | Image |
 | --------- | -------- | ----- |
@@ -99,8 +99,8 @@ FQDNs (`networkPolicy.egressFqdns`); the frontend egresses only to DNS. Set
 No cluster required — render and validate the manifests:
 
 ```bash
-helm lint deploy/helm/finplan
-helm template finplan deploy/helm/finplan \
+helm lint charts/finplan
+helm template finplan charts/finplan \
   --set api.auth0.authority=https://t.auth0.com/ --set api.auth0.clientId=x \
   --set frontend.oidc.authority=https://t.auth0.com/ --set frontend.oidc.clientId=x \
   | kubeconform -strict -ignore-missing-schemas -summary
