@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/MichielVanHerreweghe/finplan/compare/frontend-v1.0.0...frontend-v1.0.1) (2026-06-17)
+
+
+### Bug Fixes
+
+* build frontend image on native platform to avoid arm64 emulation ([1e53960](https://github.com/MichielVanHerreweghe/finplan/commit/1e53960452e64f04d4d6fb1fc197edb3f9610b0d))
+
 ## 1.0.0 (2026-06-17)
 
 
