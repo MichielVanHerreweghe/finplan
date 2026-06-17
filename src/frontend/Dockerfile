@@ -17,7 +17,16 @@ COPY . .
 RUN npm run build
 
 # nginx-unprivileged listens on 8080 and runs as uid 101 (non-root) out of the box.
-FROM nginxinc/nginx-unprivileged:1.27-alpine AS final
+# 1.30 is the current stable track (even minor); pin to it to stay on a maintained Alpine.
+FROM nginxinc/nginx-unprivileged:1.30-alpine AS final
+
+# Patch OS packages flagged by the image scanner: even the latest base lags a few
+# days behind Alpine's security releases (notably openssl), so apply the newest
+# fixes from the Alpine repos. Needs root, then drops back to the unprivileged
+# nginx user (uid 101) the base image runs as.
+USER root
+RUN apk upgrade --no-cache
+USER 101
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --chmod=0755 docker-entrypoint.d/40-render-config.sh /docker-entrypoint.d/40-render-config.sh
