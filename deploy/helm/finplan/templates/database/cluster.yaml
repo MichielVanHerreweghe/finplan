@@ -1,0 +1,51 @@
+{{- if .Values.database.enabled -}}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ include "finplan.db.fullname" . }}
+  labels:
+    {{- include "finplan.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  instances: {{ .Values.database.instances }}
+  {{- with .Values.database.imageName }}
+  imageName: {{ . }}
+  {{- end }}
+
+  # Creates the "{{ .Values.database.name }}" database owned by role "{{ .Values.database.owner }}"
+  # and generates the "{{ include "finplan.db.fullname" . }}-app" credentials secret the API consumes.
+  bootstrap:
+    initdb:
+      database: {{ .Values.database.name }}
+      owner: {{ .Values.database.owner }}
+
+  storage:
+    size: {{ .Values.database.storage.size }}
+    {{- with .Values.database.storage.storageClass }}
+    storageClass: {{ . }}
+    {{- end }}
+
+  {{- with .Values.database.resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  {{- with .Values.database.affinity }}
+  affinity:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  monitoring:
+    enablePodMonitor: {{ .Values.database.monitoring.enablePodMonitor }}
+
+  {{- if .Values.database.backup.enabled }}
+  backup:
+    {{- with .Values.database.backup.retentionPolicy }}
+    retentionPolicy: {{ . | quote }}
+    {{- end }}
+    {{- with .Values.database.backup.barmanObjectStore }}
+    barmanObjectStore:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+{{- end }}

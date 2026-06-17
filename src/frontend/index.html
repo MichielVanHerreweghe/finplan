@@ -5,6 +5,10 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FinPlan</title>
+    <!-- Runtime config: a classic (non-module) script so it runs before the deferred app
+         module. Served from public/config.js in dev; rendered from env vars at container
+         start in production (see the frontend Dockerfile). -->
+    <script src="/config.js"></script>
   </head>
   <body>
     <div id="root"></div>

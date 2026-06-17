@@ -1,0 +1,299 @@
+# Default values for the FinPlan chart.
+# See deploy/README.md for prerequisites (CloudNativePG, Envoy Gateway, cert-manager, Cilium).
+
+# -- Override the chart name used in resource names.
+nameOverride: ""
+# -- Fully override the generated release-prefixed name.
+fullnameOverride: ""
+
+# Common image settings shared by the workloads.
+image:
+  # -- Registry that hosts both images. Combined with each workload's `repository`.
+  registry: ghcr.io
+  # -- Image pull secrets (names of existing dockerconfigjson secrets).
+  pullSecrets: []
+
+# =====================================================================================
+# Backend GraphQL API (.NET)
+# =====================================================================================
+api:
+  image:
+    # -- API image repository (without registry).
+    repository: michielvanherreweghe/finplan-backend
+    # -- Image tag. Empty string defaults to the chart's appVersion.
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  # -- Replicas when autoscaling is disabled.
+  replicaCount: 2
+
+  # Auth0 / OIDC. The API validates the ID token; these values are not secret (the client id
+  # is public), so they are rendered into a ConfigMap. Authority MUST end with a trailing slash.
+  auth0:
+    authority: ""
+    clientId: ""
+
+  # -- Extra environment variables (list of {name,value} or full env entries).
+  extraEnv: []
+  # -- Extra envFrom sources (configMapRef/secretRef).
+  extraEnvFrom: []
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+  # Probes hit the endpoints added in Program.cs. Readiness gates on DB connectivity.
+  livenessProbe:
+    httpGet:
+      path: /health/live
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health/ready
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  startupProbe:
+    httpGet:
+      path: /health/live
+      port: http
+    periodSeconds: 5
+    failureThreshold: 30
+
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: ""
+
+  # PodDisruptionBudget (applied when replicas/minReplicas > 1).
+  pdb:
+    enabled: true
+    minAvailable: 1
+
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  # Spread replicas across nodes by default for resilience.
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector: null # populated with the API selector by the template
+
+# =====================================================================================
+# Database migrations (EF Core) — runs `dotnet FinPlan.Api.dll migrate` as a Helm hook Job
+# so the schema is applied before a new API rolls out.
+# =====================================================================================
+migrations:
+  enabled: true
+  backoffLimit: 10
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+# =====================================================================================
+# Frontend SPA (React/nginx)
+# =====================================================================================
+frontend:
+  image:
+    repository: michielvanherreweghe/finplan-frontend
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  replicaCount: 2
+
+  # OIDC config injected into the SPA at container start (see the frontend Dockerfile).
+  oidc:
+    authority: ""
+    clientId: ""
+    scope: "openid profile email"
+
+  extraEnv: []
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi
+
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 10
+
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: ""
+
+  pdb:
+    enabled: true
+    minAvailable: 1
+
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector: null
+
+# =====================================================================================
+# Database — CloudNativePG Cluster (postgresql.cnpg.io/v1)
+# =====================================================================================
+database:
+  # -- Create a CloudNativePG Cluster. Disable to connect to an external Postgres
+  #    (then set `database.existingSecret`).
+  enabled: true
+
+  # Logical database + owning role created by CNPG bootstrap.
+  name: finplan
+  owner: finplan
+
+  # -- Instance count. 1 for single-node / dev (the current default). For HA, raise to 3 AND
+  #    enable anti-affinity below so replicas land on different nodes.
+  instances: 1
+
+  # -- Override the Postgres image (defaults to the operator's default when empty).
+  imageName: ""
+
+  storage:
+    size: 10Gi
+    # -- StorageClass; empty uses the cluster default.
+    storageClass: ""
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+  # CNPG affinity. Anti-affinity is OFF by default so the cluster schedules on a single node.
+  # For multi-node HA set enablePodAntiAffinity=true (podAntiAffinityType "preferred" keeps it
+  # schedulable; use "required" to hard-guarantee one instance per node).
+  affinity:
+    enablePodAntiAffinity: false
+    topologyKey: kubernetes.io/hostname
+    # podAntiAffinityType: preferred
+
+  monitoring:
+    # -- Emit a PodMonitor for the Prometheus operator.
+    enablePodMonitor: false
+
+  # Barman object-store backups (disabled by default). See the CNPG docs for the schema.
+  backup:
+    enabled: false
+    # retentionPolicy: "30d"
+    # barmanObjectStore: {}
+
+  # External database mode (database.enabled=false). Secret must expose the same keys CNPG
+  # produces: host, port, dbname, username, password.
+  existingSecret: ""
+
+# =====================================================================================
+# Ingress — Gateway API HTTPRoute
+#
+# The Gateway itself (listeners, TLS, cert-manager) is provisioned and owned OUTSIDE this
+# chart (e.g. a shared Envoy Gateway). This chart only attaches an HTTPRoute to it.
+# =====================================================================================
+httpRoute:
+  enabled: true
+
+  # -- Existing Gateway(s) to attach to. Point at your Envoy Gateway and its TLS listener.
+  parentRefs:
+    - name: shared-gateway
+      namespace: envoy-gateway-system
+      sectionName: https
+
+  # -- Hostnames the route answers for. CHANGE THIS. Empty inherits the Gateway listener's.
+  hostnames:
+    - finplan.example.com
+
+  annotations: {}
+
+# =====================================================================================
+# Network policies — Cilium (cilium.io/v2 CiliumNetworkPolicy)
+# =====================================================================================
+networkPolicy:
+  enabled: true
+
+  # -- Apply a default-deny baseline to the API and frontend pods (all ingress/egress denied
+  #    except the explicit allows below). DNS is always permitted.
+  defaultDeny: true
+
+  # Namespace + selector identifying the Envoy Gateway data-plane (Envoy) pods that send
+  # traffic to the workloads.
+  gateway:
+    namespace: envoy-gateway-system
+    # Label present on Envoy Gateway-managed proxy pods.
+    podSelector:
+      app.kubernetes.io/managed-by: envoy-gateway
+
+  # kube-dns selector for egress DNS resolution.
+  dns:
+    namespace: kube-system
+    podSelector:
+      k8s-app: kube-dns
+
+  # FQDNs the API must reach for OIDC discovery / JWKS validation (Auth0). Requires Cilium
+  # DNS-based policy (toFQDNs). Adjust to your tenant/custom domain.
+  egressFqdns:
+    - matchPattern: "*.auth0.com"
+
+# =====================================================================================
+# Pod/Service accounts and security context
+# =====================================================================================
+serviceAccount:
+  create: true
+  annotations: {}
+  # Don't mount the API token; the workloads don't call the Kubernetes API.
+  automountServiceAccountToken: false
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+  fsGroup: 1654
+
+# Container-level hardening applied to API and frontend (UIDs differ; set per workload below).
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL

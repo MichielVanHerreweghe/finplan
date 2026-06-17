@@ -1,0 +1,109 @@
+{{- if .Values.networkPolicy.enabled -}}
+{{- $ns := .Release.Namespace -}}
+# =====================================================================================
+# API: ingress only from the Envoy Gateway proxies; egress (when defaultDeny) to the
+# database, DNS, and the Auth0 OIDC endpoints.
+# =====================================================================================
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: {{ include "finplan.api.fullname" . }}
+  labels:
+    {{- include "finplan.api.labels" . | nindent 4 }}
+spec:
+  endpointSelector:
+    matchLabels:
+      {{- include "finplan.api.selectorLabels" . | nindent 6 }}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: {{ .Values.networkPolicy.gateway.namespace }}
+            {{- range $k, $v := .Values.networkPolicy.gateway.podSelector }}
+            {{ $k }}: {{ $v | quote }}
+            {{- end }}
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+  {{- if .Values.networkPolicy.defaultDeny }}
+  egress:
+    {{- if .Values.database.enabled }}
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: {{ $ns }}
+            cnpg.io/cluster: {{ include "finplan.db.fullname" . }}
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    {{- end }}
+    # DNS resolution (also required for toFQDNs below to work).
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: {{ .Values.networkPolicy.dns.namespace }}
+            {{- range $k, $v := .Values.networkPolicy.dns.podSelector }}
+            {{ $k }}: {{ $v | quote }}
+            {{- end }}
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+    {{- with .Values.networkPolicy.egressFqdns }}
+    # OIDC discovery / JWKS validation against Auth0.
+    - toFQDNs:
+        {{- toYaml . | nindent 8 }}
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    {{- end }}
+  {{- end }}
+---
+# =====================================================================================
+# Frontend: ingress only from the Envoy Gateway proxies; egress (when defaultDeny) to DNS.
+# =====================================================================================
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: {{ include "finplan.frontend.fullname" . }}
+  labels:
+    {{- include "finplan.frontend.labels" . | nindent 4 }}
+spec:
+  endpointSelector:
+    matchLabels:
+      {{- include "finplan.frontend.selectorLabels" . | nindent 6 }}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: {{ .Values.networkPolicy.gateway.namespace }}
+            {{- range $k, $v := .Values.networkPolicy.gateway.podSelector }}
+            {{ $k }}: {{ $v | quote }}
+            {{- end }}
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+  {{- if .Values.networkPolicy.defaultDeny }}
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: {{ .Values.networkPolicy.dns.namespace }}
+            {{- range $k, $v := .Values.networkPolicy.dns.podSelector }}
+            {{ $k }}: {{ $v | quote }}
+            {{- end }}
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  {{- end }}
+{{- end }}

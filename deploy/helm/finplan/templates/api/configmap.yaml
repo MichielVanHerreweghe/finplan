@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "finplan.api.fullname" . }}
+  labels:
+    {{- include "finplan.api.labels" . | nindent 4 }}
+data:
+  # Non-secret app configuration. The Auth0 client id is public; the connection string is
+  # injected separately from the database credentials secret (see the Deployment).
+  ASPNETCORE_ENVIRONMENT: "Production"
+  Authentication__Auth0__Authority: {{ required "api.auth0.authority is required (e.g. https://<tenant>.auth0.com/)" .Values.api.auth0.authority | quote }}
+  Authentication__Auth0__ClientId: {{ required "api.auth0.clientId is required" .Values.api.auth0.clientId | quote }}

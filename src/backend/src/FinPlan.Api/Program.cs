@@ -3,13 +3,16 @@ using FinPlan.Api.GraphQL.Errors;
 using FinPlan.Api.GraphQL.Mutations;
 using FinPlan.Api.GraphQL.Queries;
 using FinPlan.Api.GraphQL.Types;
+using FinPlan.Api.Health;
 using FinPlan.Api.Security;
 using FinPlan.Application;
 using FinPlan.Domain.Common;
 using FinPlan.Infrastructure;
 using FinPlan.Infrastructure.Database;
 using HotChocolate.AspNetCore;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +30,13 @@ builder.Services.AddScoped<IUserProvisioningService, UserProvisioningService>();
 builder.Services.AddFinPlanAuthentication(builder.Configuration);
 builder.Services.AddAuthorization();
 
+// Kubernetes probes. "live" runs no checks (process-up = healthy); "ready" gates traffic on
+// the database being reachable so a pod with a broken DB connection is pulled from rotation.
+builder.Services.AddScoped<DatabaseHealthCheck>();
+builder.Services
+    .AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);
+
 builder.Services
     .AddGraphQLServer()
     .AddAuthorization()
@@ -43,11 +53,21 @@ builder.Services
 
 WebApplication app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+// Database migrations:
+//   * "migrate" command — apply pending migrations and exit. The Helm pre-upgrade Job runs
+//     this so schema changes land before the new API rolls out, with no multi-replica races.
+//   * Development — auto-apply on startup for a friction-free local loop.
+bool migrateAndExit = args.Contains("migrate");
+if (migrateAndExit || app.Environment.IsDevelopment())
 {
     using IServiceScope scope = app.Services.CreateScope();
     ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await dbContext.Database.MigrateAsync();
+
+    if (migrateAndExit)
+    {
+        return;
+    }
 }
 
 app.UseAuthentication();
@@ -63,5 +83,11 @@ app.UseMiddleware<ActiveContextMiddleware>();
 app.MapGraphQL()
     .WithOptions((GraphQLServerOptions options) =>
         options.Tool.Enable = app.Environment.IsDevelopment());
+
+// Liveness has no dependencies; readiness runs only the "ready"-tagged checks (the DB probe).
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false })
+    .AllowAnonymous();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") })
+    .AllowAnonymous();
 
 app.Run();

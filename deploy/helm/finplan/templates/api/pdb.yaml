@@ -1,0 +1,13 @@
+{{- if and .Values.api.pdb.enabled (or (gt (int .Values.api.replicaCount) 1) .Values.api.autoscaling.enabled) -}}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "finplan.api.fullname" . }}
+  labels:
+    {{- include "finplan.api.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.api.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "finplan.api.selectorLabels" . | nindent 6 }}
+{{- end }}
