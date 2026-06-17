@@ -1,12 +1,13 @@
 apiVersion: v2
 name: finplan
-description: FinPlan — GraphQL API (.NET) and SPA (React), with CloudNativePG, Envoy Gateway, and Cilium network policies.
+description: FinPlan — GraphQL API (.NET) and SPA (React), with CloudNativePG,
+  Envoy Gateway, and Cilium network policies.
 type: application
 
 # Chart version and appVersion are both owned by release-please (release-type "helm");
 # do not edit by hand. appVersion is the default container image tag for the workloads —
 # override per image via values when the app and chart versions diverge.
-version: 0.1.0
+version: 0.2.0
 appVersion: "0.1.0"
 
 home: https://github.com/MichielVanHerreweghe/finplan
