@@ -1,0 +1,60 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "timezone": "Europe/Brussels",
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 0,
+  "semanticCommits": "enabled",
+  "semanticCommitType": "deps",
+  "semanticCommitScope": null,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  },
+  "packageRules": [
+    {
+      "description": "Frontend (npm) PRs",
+      "matchFileNames": ["src/frontend/**"],
+      "addLabels": ["frontend"]
+    },
+    {
+      "description": "Backend (.NET) PRs",
+      "matchFileNames": ["src/backend/**"],
+      "addLabels": ["backend"]
+    },
+    {
+      "description": "Group all non-major npm devDependencies",
+      "matchFileNames": ["src/frontend/**"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "frontend dev dependencies"
+    },
+    {
+      "description": "Group Radix UI packages",
+      "matchPackageNames": ["@radix-ui/**"],
+      "groupName": "radix-ui"
+    },
+    {
+      "description": "Group HotChocolate packages (released in lockstep)",
+      "matchPackageNames": ["HotChocolate**"],
+      "groupName": "hotchocolate"
+    },
+    {
+      "description": "Group Microsoft .NET / EF Core packages",
+      "matchPackageNames": ["Microsoft.**"],
+      "groupName": "microsoft .net packages"
+    },
+    {
+      "description": "Group GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "addLabels": ["ci"]
+    }
+  ]
+}
