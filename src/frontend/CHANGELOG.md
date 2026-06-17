@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/MichielVanHerreweghe/finplan/compare/frontend-v1.0.1...frontend-v1.0.2) (2026-06-17)
+
+
+### Bug Fixes
+
+* frontend to backend communication ([9a2c322](https://github.com/MichielVanHerreweghe/finplan/commit/9a2c322f3527079e455e993b965a3940de2a721a))
+
 ## [1.0.1](https://github.com/MichielVanHerreweghe/finplan/compare/frontend-v1.0.0...frontend-v1.0.1) (2026-06-17)
 
 
