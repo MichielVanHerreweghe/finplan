@@ -18,14 +18,8 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   rules:
-    # Most specific match wins: /graphql is routed to the API, everything else to the SPA.
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /graphql
-      backendRefs:
-        - name: {{ include "finplan.api.fullname" . }}
-          port: {{ .Values.api.service.port }}
+    # Only the SPA is exposed through the gateway. The API is reached same-origin via the
+    # frontend's nginx /graphql reverse-proxy (see the frontend image), so it stays internal.
     - matches:
         - path:
             type: PathPrefix

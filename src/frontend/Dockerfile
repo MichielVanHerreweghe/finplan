@@ -34,6 +34,7 @@ USER 101
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --chmod=0755 docker-entrypoint.d/40-render-config.sh /docker-entrypoint.d/40-render-config.sh
+COPY --chmod=0755 docker-entrypoint.d/45-render-proxy.sh /docker-entrypoint.d/45-render-proxy.sh
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 8080

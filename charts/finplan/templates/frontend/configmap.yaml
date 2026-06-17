@@ -9,3 +9,6 @@ data:
   OIDC_AUTHORITY: {{ required "frontend.oidc.authority is required (e.g. https://<tenant>.auth0.com/)" .Values.frontend.oidc.authority | quote }}
   OIDC_CLIENT_ID: {{ required "frontend.oidc.clientId is required" .Values.frontend.oidc.clientId | quote }}
   OIDC_SCOPE: {{ .Values.frontend.oidc.scope | quote }}
+  # Upstream for the nginx /graphql reverse-proxy (see docker-entrypoint.d/45-render-proxy.sh).
+  # The API is not exposed through the gateway; the SPA reaches it same-origin via this proxy.
+  API_UPSTREAM: {{ printf "http://%s:%v" (include "finplan.api.fullname" .) .Values.api.service.port | quote }}

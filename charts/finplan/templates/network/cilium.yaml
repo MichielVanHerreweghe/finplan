@@ -1,8 +1,8 @@
 {{- if .Values.networkPolicy.enabled -}}
 {{- $ns := .Release.Namespace -}}
 # =====================================================================================
-# API: ingress only from the Envoy Gateway proxies; egress (when defaultDeny) to the
-# database, DNS, and the Auth0 OIDC endpoints.
+# API: ingress only from the frontend nginx /graphql reverse-proxy (the API is not exposed
+# through the gateway); egress (when defaultDeny) to the database, DNS, and Auth0 OIDC.
 # =====================================================================================
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
@@ -17,10 +17,7 @@ spec:
   ingress:
     - fromEndpoints:
         - matchLabels:
-            k8s:io.kubernetes.pod.namespace: {{ .Values.networkPolicy.gateway.namespace }}
-            {{- range $k, $v := .Values.networkPolicy.gateway.podSelector }}
-            {{ $k }}: {{ $v | quote }}
-            {{- end }}
+            {{- include "finplan.frontend.selectorLabels" . | nindent 12 }}
       toPorts:
         - ports:
             - port: "8080"
@@ -90,6 +87,14 @@ spec:
               protocol: TCP
   {{- if .Values.networkPolicy.defaultDeny }}
   egress:
+    # Reach the API behind the /graphql reverse-proxy.
+    - toEndpoints:
+        - matchLabels:
+            {{- include "finplan.api.selectorLabels" . | nindent 12 }}
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: {{ .Values.networkPolicy.dns.namespace }}
