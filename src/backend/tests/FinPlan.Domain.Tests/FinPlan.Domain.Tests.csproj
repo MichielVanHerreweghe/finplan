@@ -16,6 +16,8 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\FinPlan.Domain\FinPlan.Domain.csproj" />
+        <!-- For exercising the Ical.Net-backed IRecurrenceScheduler implementation. -->
+        <ProjectReference Include="..\..\src\FinPlan.Infrastructure\FinPlan.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>

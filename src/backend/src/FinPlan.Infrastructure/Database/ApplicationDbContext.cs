@@ -5,6 +5,7 @@ using FinPlan.Domain.Contacts;
 using FinPlan.Domain.Groups;
 using FinPlan.Domain.Invitations;
 using FinPlan.Domain.Pockets;
+using FinPlan.Domain.RecurringTransactions;
 using FinPlan.Domain.SavingGoals;
 using FinPlan.Domain.Transactions;
 using FinPlan.Domain.Users;
@@ -20,6 +21,7 @@ public sealed class ApplicationDbContext : DbContext, IUnitOfWork
 
     public DbSet<TransactionCategory> TransactionCategories => Set<TransactionCategory>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<RecurringTransaction> RecurringTransactions => Set<RecurringTransaction>();
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
     public DbSet<Pocket> Pockets => Set<Pocket>();
     public DbSet<User> Users => Set<User>();

@@ -18,6 +18,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\FinPlan.Api\FinPlan.Api.csproj" />
+        <ProjectReference Include="..\FinPlan.Worker\FinPlan.Worker.csproj" />
     </ItemGroup>
 
 </Project>

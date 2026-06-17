@@ -27,6 +27,29 @@ public sealed record UpdateTransactionInput(
     int? ToPocketId,
     int? SavingGoalId);
 
+public sealed record CreateRecurringTransactionInput(
+    string Name,
+    decimal Amount,
+    TransactionType Type,
+    int? CategoryId,
+    int? FromPocketId,
+    int? ToPocketId,
+    int? SavingGoalId,
+    string RecurrenceRule,
+    DateOnly StartDate);
+
+public sealed record UpdateRecurringTransactionInput(
+    int Id,
+    string Name,
+    decimal Amount,
+    TransactionType Type,
+    int? CategoryId,
+    int? FromPocketId,
+    int? ToPocketId,
+    int? SavingGoalId,
+    string RecurrenceRule,
+    DateOnly StartDate);
+
 public sealed record CreateTransactionCategoryInput(string Name);
 
 public sealed record UpdateTransactionCategoryInput(int Id, string Name);

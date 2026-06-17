@@ -28,5 +28,11 @@ builder.AddProject<Projects.FinPlan_Api>("api")
     .WithReference(database)
     .WaitFor(database);
 
+// Background worker hosting the daily Quartz job that materialises recurring transactions.
+// Shares the same database; no endpoint of its own.
+builder.AddProject<Projects.FinPlan_Worker>("worker")
+    .WithReference(database)
+    .WaitFor(database);
+
 builder.Build()
     .Run();

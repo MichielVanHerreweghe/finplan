@@ -5,6 +5,7 @@
     <Project Path="src/FinPlan.Domain/FinPlan.Domain.csproj" />
     <Project Path="src/FinPlan.Host/FinPlan.Host.csproj" />
     <Project Path="src/FinPlan.Infrastructure/FinPlan.Infrastructure.csproj" />
+    <Project Path="src/FinPlan.Worker/FinPlan.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/FinPlan.Domain.Tests/FinPlan.Domain.Tests.csproj" />
