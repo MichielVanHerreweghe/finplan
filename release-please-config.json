@@ -36,6 +36,12 @@
       "component": "frontend",
       "package-name": "finplan-frontend",
       "changelog-path": "CHANGELOG.md"
+    },
+    "charts/finplan": {
+      "release-type": "helm",
+      "component": "chart",
+      "package-name": "finplan-chart",
+      "changelog-path": "CHANGELOG.md"
     }
   }
 }

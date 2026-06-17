@@ -4,9 +4,11 @@ import {
   type UserManagerSettings,
 } from "oidc-client-ts";
 
-const authority = import.meta.env.VITE_OIDC_AUTHORITY;
-const clientId = import.meta.env.VITE_OIDC_CLIENT_ID;
-const scope = import.meta.env.VITE_OIDC_SCOPE ?? "openid profile email";
+import { config } from "@/lib/runtime-config";
+
+const authority = config.oidcAuthority;
+const clientId = config.oidcClientId;
+const scope = config.oidcScope;
 
 if (!authority || !clientId) {
   // Fail loudly in dev rather than surfacing a cryptic OIDC discovery error later.

@@ -1,0 +1,55 @@
+{{- if .Values.migrations.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "finplan.api.fullname" . }}-migrate
+  labels:
+    {{- include "finplan.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
+  annotations:
+    # post-install: the CNPG cluster + its credentials secret exist by then (fresh install).
+    # pre-upgrade: apply schema changes before the new API rolls out (no multi-replica race).
+    "helm.sh/hook": post-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.migrations.backoffLimit }}
+  # Job pods retry until the database is reachable and migrations succeed.
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "finplan.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "finplan.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      {{- include "finplan.imagePullSecrets" . | nindent 6 }}
+      securityContext:
+        runAsUser: 1654
+        runAsGroup: 1654
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: migrate
+          image: {{ include "finplan.api.image" . }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          args: ["migrate"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          envFrom:
+            # Provides ASPNETCORE_ENVIRONMENT + Auth0 config (validated during host build).
+            - configMapRef:
+                name: {{ include "finplan.api.fullname" . }}
+          env:
+            {{- include "finplan.db.env" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.migrations.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+{{- end }}

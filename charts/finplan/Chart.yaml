@@ -1,0 +1,30 @@
+apiVersion: v2
+name: finplan
+description: FinPlan — GraphQL API (.NET) and SPA (React), with CloudNativePG, Envoy Gateway, and Cilium network policies.
+type: application
+
+# Chart version and appVersion are both owned by release-please (release-type "helm");
+# do not edit by hand. appVersion is the default container image tag for the workloads —
+# override per image via values when the app and chart versions diverge.
+version: 0.1.0
+appVersion: "0.1.0"
+
+home: https://github.com/MichielVanHerreweghe/finplan
+sources:
+  - https://github.com/MichielVanHerreweghe/finplan
+
+keywords:
+  - finplan
+  - graphql
+  - dotnet
+  - react
+
+maintainers:
+  - name: Michiel Van Herreweghe
+
+# This chart renders CloudNativePG (postgresql.cnpg.io), Gateway API (gateway.networking.k8s.io),
+# cert-manager (cert-manager.io) and Cilium (cilium.io) custom resources. Those CRDs/operators
+# must already be installed in the cluster — they are intentionally NOT bundled as dependencies
+# so the chart stays decoupled from operator lifecycle/versioning. See charts/README.md.
+annotations:
+  category: Finance

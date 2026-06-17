@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths:
-      - "deploy/helm/**"
+      - "charts/**"
       - ".github/workflows/charts-ci.yml"
   pull_request:
     paths:
-      - "deploy/helm/**"
+      - "charts/**"
       - ".github/workflows/charts-ci.yml"
 
 permissions:
@@ -20,7 +20,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CHART_DIR: deploy/helm/finplan
+  CHART_DIR: charts/finplan
+  # Placeholder values for the `required` Auth0/OIDC fields so lint/template can render.
+  CI_VALUES: .github/ci/chart-test-values.yaml
 
 jobs:
   lint-and-template:
@@ -33,10 +35,10 @@ jobs:
           version: v3.16.3
 
       - name: Lint chart
-        run: helm lint "$CHART_DIR"
+        run: helm lint "$CHART_DIR" --values "$CI_VALUES"
 
-      # Render with default values to catch template errors. The chart relies on
-      # CRDs (CNPG, Cilium, Gateway API), so we validate rendering only — full
-      # schema validation (e.g. kubeconform) would false-fail on those CRDs.
+      # Render to catch template errors. The chart relies on CRDs (CNPG, Cilium,
+      # Gateway API), so we validate rendering only — full schema validation (e.g.
+      # kubeconform) would false-fail on those CRDs.
       - name: Template chart
-        run: helm template finplan "$CHART_DIR" > /dev/null
+        run: helm template finplan "$CHART_DIR" --values "$CI_VALUES" > /dev/null

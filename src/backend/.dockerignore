@@ -1,0 +1,10 @@
+# Build outputs and IDE/tooling cruft — keep the build context small and reproducible.
+**/bin/
+**/obj/
+**/.idea/
+**/.vs/
+**/*.user
+**/appsettings.Development.json
+**/appsettings.*.Development.json
+Dockerfile
+.dockerignore

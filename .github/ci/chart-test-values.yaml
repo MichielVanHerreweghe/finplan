@@ -1,0 +1,11 @@
+# Placeholder values for CI rendering only (helm lint / helm template).
+# The chart `required`s these Auth0/OIDC fields; they are public client config,
+# not secrets, and these dummy values are never deployed.
+api:
+  auth0:
+    authority: https://example.auth0.com/
+    clientId: ci-api-client-id
+frontend:
+  oidc:
+    authority: https://example.auth0.com/
+    clientId: ci-spa-client-id

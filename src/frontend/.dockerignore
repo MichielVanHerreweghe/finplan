@@ -1,0 +1,14 @@
+# Keep the build context small; these are rebuilt inside the image or are local-only.
+node_modules
+dist
+dist-ssr
+.vite
+.env
+.env.*
+!.env.example
+*.local
+.idea
+.vscode
+Dockerfile
+.dockerignore
+npm-debug.log*

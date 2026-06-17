@@ -5,11 +5,6 @@ on:
     branches:
       - main
 
-# Allow release-please to open/maintain the release PR and create tags + releases.
-permissions:
-  contents: write
-  pull-requests: write
-
 # Avoid two release-please runs racing on rapid merges to main.
 concurrency:
   group: release-please-${{ github.ref }}
@@ -18,29 +13,127 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    # Allow release-please to open/maintain the release PR and create tags + releases.
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      backend_released: ${{ steps.release.outputs['src/backend--release_created'] }}
+      backend_version: ${{ steps.release.outputs['src/backend--version'] }}
+      frontend_released: ${{ steps.release.outputs['src/frontend--release_created'] }}
+      frontend_version: ${{ steps.release.outputs['src/frontend--version'] }}
+      chart_released: ${{ steps.release.outputs['charts/finplan--release_created'] }}
+      chart_version: ${{ steps.release.outputs['charts/finplan--version'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          # GITHUB_TOKEN is enough to open the release PR and cut tags/releases.
-          # NOTE: releases created with GITHUB_TOKEN do NOT trigger other
-          # workflows (e.g. a Docker build on the tag). When you add a build
-          # pipeline that must fire on release, swap this for a PAT stored as
-          # secrets.RELEASE_PLEASE_TOKEN.
+          # GITHUB_TOKEN is enough here: the image/chart builds below run as dependent jobs in
+          # THIS run (gated on the release outputs), so they don't rely on a tag-push trigger
+          # that GITHUB_TOKEN-created tags would not fire.
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      # Example of how downstream jobs consume the per-component outputs.
-      # Output keys are prefixed by the package path: "src/backend--<name>".
-      - name: Backend release summary
-        if: ${{ steps.release.outputs['src/backend--release_created'] }}
-        run: |
-          echo "Backend released: ${{ steps.release.outputs['src/backend--tag_name'] }}"
-          echo "Version: ${{ steps.release.outputs['src/backend--version'] }}"
+  # ---------------------------------------------------------------------------------------
+  # Build + push the backend image to GHCR when a backend release is cut.
+  # ---------------------------------------------------------------------------------------
+  backend-image:
+    needs: release-please
+    if: needs.release-please.outputs.backend_released == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/finplan-backend
+          tags: |
+            type=raw,value=${{ needs.release-please.outputs.backend_version }}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: src/backend
+          file: src/backend/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Frontend release summary
-        if: ${{ steps.release.outputs['src/frontend--release_created'] }}
+  # ---------------------------------------------------------------------------------------
+  # Build + push the frontend image to GHCR when a frontend release is cut.
+  # ---------------------------------------------------------------------------------------
+  frontend-image:
+    needs: release-please
+    if: needs.release-please.outputs.frontend_released == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/finplan-frontend
+          tags: |
+            type=raw,value=${{ needs.release-please.outputs.frontend_version }}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: src/frontend
+          file: src/frontend/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ---------------------------------------------------------------------------------------
+  # Package + push the Helm chart as an OCI artifact when a chart release is cut.
+  # ---------------------------------------------------------------------------------------
+  chart:
+    needs: release-please
+    if: needs.release-please.outputs.chart_released == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+      - name: Lowercase owner
+        id: owner
+        run: echo "value=${OWNER,,}" >> "$GITHUB_OUTPUT"
+        env:
+          OWNER: ${{ github.repository_owner }}
+      - name: Package and push chart
         run: |
-          echo "Frontend released: ${{ steps.release.outputs['src/frontend--tag_name'] }}"
-          echo "Version: ${{ steps.release.outputs['src/frontend--version'] }}"
+          helm registry login ghcr.io \
+            --username "${{ github.actor }}" \
+            --password "${{ secrets.GITHUB_TOKEN }}"
+          helm package charts/finplan --version "${{ needs.release-please.outputs.chart_version }}"
+          helm push "finplan-${{ needs.release-please.outputs.chart_version }}.tgz" \
+            "oci://ghcr.io/${{ steps.owner.outputs.value }}/charts"
