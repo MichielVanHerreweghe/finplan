@@ -6,7 +6,11 @@
 
 ARG NODE_VERSION=24
 
-FROM node:${NODE_VERSION}-alpine AS build
+# Pin the build to the native build platform: the SPA bundle (dist/) is static and
+# architecture-independent, so there's no reason to run npm ci / npm run build under
+# arm64 QEMU emulation (which is painfully slow). Only the final nginx stage is built
+# per-target-arch. BUILDPLATFORM is auto-provided by BuildKit.
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-alpine AS build
 WORKDIR /app
 
 # Install against the lockfile first for a cached dependency layer.
