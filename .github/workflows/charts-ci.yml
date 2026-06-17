@@ -1,0 +1,42 @@
+name: charts-ci
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "deploy/helm/**"
+      - ".github/workflows/charts-ci.yml"
+  pull_request:
+    paths:
+      - "deploy/helm/**"
+      - ".github/workflows/charts-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: charts-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CHART_DIR: deploy/helm/finplan
+
+jobs:
+  lint-and-template:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+
+      - name: Lint chart
+        run: helm lint "$CHART_DIR"
+
+      # Render with default values to catch template errors. The chart relies on
+      # CRDs (CNPG, Cilium, Gateway API), so we validate rendering only — full
+      # schema validation (e.g. kubeconform) would false-fail on those CRDs.
+      - name: Template chart
+        run: helm template finplan "$CHART_DIR" > /dev/null
