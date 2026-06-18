@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/MichielVanHerreweghe/finplan/compare/chart-v0.2.1...chart-v0.2.2) (2026-06-18)
+
+
+### Bug Fixes
+
+* migrations sync ([#18](https://github.com/MichielVanHerreweghe/finplan/issues/18)) ([6227bc8](https://github.com/MichielVanHerreweghe/finplan/commit/6227bc8b13401608c87255821421d729309f902c))
+
 ## [0.2.1](https://github.com/MichielVanHerreweghe/finplan/compare/chart-v0.2.0...chart-v0.2.1) (2026-06-17)
 
 

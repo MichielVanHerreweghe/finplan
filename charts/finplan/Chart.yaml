@@ -7,7 +7,7 @@ type: application
 # Chart version and appVersion are both owned by release-please (release-type "helm");
 # do not edit by hand. appVersion is the default container image tag for the workloads —
 # override per image via values when the app and chart versions diverge.
-version: 0.2.1
+version: 0.2.2
 appVersion: "0.1.0"
 
 home: https://github.com/MichielVanHerreweghe/finplan
