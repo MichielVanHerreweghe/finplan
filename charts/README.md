@@ -64,24 +64,62 @@ the (rotating) password. To use an external Postgres instead:
 --set database.enabled=false --set database.existingSecret=<secret-with-the-same-keys>
 ```
 
-### Migrations
-EF Core migrations run as a Helm hook `Job` (`post-install,pre-upgrade`) that executes
-`dotnet FinPlan.Api.dll migrate` and exits — schema changes land before a new API rolls out,
-with no multi-replica race. Disable with `--set migrations.enabled=false`.
+### Deployment ordering (sync waves)
+A deploy runs in three phases, so the database is ready before migrations and migrations land
+before the new code rolls out. Resources carry `argocd.argoproj.io/sync-wave` annotations
+(configurable under `argocd.syncWaves`):
 
-**If the migration fails** it retries up to `migrations.backoffLimit` (10) times, then the hook
-fails and the `helm` command fails. On `pre-upgrade` this **aborts the upgrade before the new
-pods roll** — the previous version keeps running against the old (intact) schema. The failed
-Job is retained so you can inspect it:
+| Wave | Resources |
+|------|-----------|
+| `0` dependencies | ServiceAccount, ConfigMaps, CiliumNetworkPolicies, CNPG `Cluster` |
+| `1` migration | EF Core migration `Job` |
+| `2` workloads | API + frontend `Deployment`s, `Service`s, `HTTPRoute`, HPAs, PDBs |
+
+ArgoCD advances to the next wave only once the current wave is **Healthy** (and the migration
+hook has **succeeded**), so a failed migration blocks the rollout — the previous version keeps
+running against the old (intact) schema.
+
+> **ArgoCD prerequisite:** wave-0 gating only waits for the database if ArgoCD has a health
+> check for the CNPG `Cluster`. Recent ArgoCD bundles one; if yours doesn't, add it to
+> `argocd-cm` (in your ArgoCD install repo — not this chart):
+> ```yaml
+> data:
+>   resource.customizations.health.postgresql.cnpg.io_Cluster: |
+>     hs = {}
+>     if obj.status ~= nil and obj.status.phase ~= nil then
+>       if obj.status.phase == "Cluster in healthy state" then
+>         hs.status = "Healthy"; hs.message = obj.status.phase; return hs
+>       end
+>       hs.status = "Progressing"; hs.message = obj.status.phase; return hs
+>     end
+>     hs.status = "Progressing"; hs.message = "Waiting for cluster"; return hs
+> ```
+> Without it ArgoCD marks the `Cluster` Healthy immediately and may run wave 1 before Postgres
+> is up — the `migrations.waitForDb` initContainer and `backoffLimit` are the only safety net then.
+
+### Migrations
+EF Core migrations run as a `Job` that executes `dotnet FinPlan.Api.dll migrate` and exits, at
+wave 1. A `wait-for-db` initContainer blocks until Postgres accepts connections so the migrate
+container never starts against an unreachable DB. Disable the Job with
+`--set migrations.enabled=false`; disable the wait with `--set migrations.waitForDb.enabled=false`.
+
+`migrations.hookMode` selects how the Job is managed:
+- **`argocd`** (default) — an ArgoCD `Sync` hook (`BeforeHookCreation`), re-created on each sync.
+- **`helm`** — a `helm.sh/hook` (`post-install,pre-upgrade`) for plain `helm install/upgrade`,
+  so Helm owns the Job lifecycle (avoids the immutable-`Job` error a re-applied Job would hit).
+  Set this if you deploy with `helm` rather than ArgoCD.
+
+**If the migration fails** it retries up to `migrations.backoffLimit` (5) times, then the Job
+fails and wave 2 never runs. The failed Job is retained so you can inspect it:
 
 ```bash
 kubectl -n finplan logs job/finplan-api-migrate
 ```
 
-Fix the cause and re-run `helm upgrade`. PostgreSQL DDL is transactional and EF wraps each
-migration in a transaction, so a mid-way failure rolls back that migration and re-running
-resumes at the first unapplied one. Deploy with `--atomic --timeout 10m` so a failed migration
-also rolls the release back cleanly.
+Fix the cause and re-sync. PostgreSQL DDL is transactional and EF wraps each migration in a
+transaction, so a mid-way failure rolls back that migration and re-running resumes at the first
+unapplied one. For plain Helm, deploy with `--atomic --timeout 10m` so a failed migration also
+rolls the release back cleanly.
 
 ### Ingress / TLS
 TLS termination and the HTTP→HTTPS redirect live on the **Gateway**, which is owned outside

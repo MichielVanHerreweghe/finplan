@@ -6,6 +6,8 @@ metadata:
   labels:
     {{- include "finplan.labels" . | nindent 4 }}
     app.kubernetes.io/component: database
+  annotations:
+    {{- include "finplan.syncWave" .Values.argocd.syncWaves.dependencies | nindent 4 }}
 spec:
   instances: {{ .Values.database.instances }}
   {{- with .Values.database.imageName }}

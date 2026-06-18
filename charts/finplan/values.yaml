@@ -14,6 +14,22 @@ image:
   pullSecrets: []
 
 # =====================================================================================
+# ArgoCD deployment ordering — resources are annotated with `argocd.argoproj.io/sync-wave`
+# so a sync proceeds in phases: (0) database + dependencies → (1) migration → (2) workloads.
+# ArgoCD advances to the next wave only once the current wave is Healthy (and the migration
+# hook has succeeded). These annotations are ignored by plain Helm, so they are safe to leave
+# on regardless of how the chart is deployed.
+# =====================================================================================
+argocd:
+  syncWaves:
+    # ServiceAccount, ConfigMaps, CiliumNetworkPolicies, CNPG Cluster.
+    dependencies: "0"
+    # EF Core migration Job (a `Sync` hook when migrations.hookMode=argocd).
+    migration: "1"
+    # API + frontend Deployments, Services, HTTPRoute, HPAs, PDBs.
+    workloads: "2"
+
+# =====================================================================================
 # Backend GraphQL API (.NET)
 # =====================================================================================
 api:
@@ -95,12 +111,29 @@ api:
       labelSelector: null # populated with the API selector by the template
 
 # =====================================================================================
-# Database migrations (EF Core) — runs `dotnet FinPlan.Api.dll migrate` as a Helm hook Job
-# so the schema is applied before a new API rolls out.
+# Database migrations (EF Core) — runs `dotnet FinPlan.Api.dll migrate` as a Job, ordered
+# AFTER the database (wave 0) and BEFORE the workloads (wave 2). See `argocd.syncWaves`.
 # =====================================================================================
 migrations:
   enabled: true
-  backoffLimit: 10
+
+  # -- Ordering mode for the migration Job.
+  #    "argocd": ArgoCD `Sync` hook + sync-wave (the GitOps deploy path — default).
+  #    "helm":   helm.sh/hook for plain `helm install/upgrade` (Helm manages the hook Job's
+  #              lifecycle, avoiding the immutable-Job error a re-applied normal Job would hit).
+  hookMode: argocd
+
+  # -- Job retry limit. DB readiness is now gated structurally (wave 0 + waitForDb), so a
+  #    failure almost always means a real migration error — fail fast rather than retry 10x.
+  backoffLimit: 5
+
+  # initContainer that blocks until the database TCP port accepts connections, so the migrate
+  # container never starts against an unreachable DB (no connection-refused retry churn).
+  waitForDb:
+    enabled: true
+    # -- Image providing `nc` for the TCP wait.
+    image: busybox:1.36
+
   resources:
     requests:
       cpu: 50m

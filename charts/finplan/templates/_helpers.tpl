@@ -134,3 +134,30 @@ via kubelet $(VAR) interpolation so CNPG keeps ownership of the rotating passwor
 - name: ConnectionStrings__Database
   value: "Host=$(DB_HOST);Port=$(DB_PORT);Database=$(DB_NAME);Username=$(DB_USER);Password=$(DB_PASSWORD)"
 {{- end -}}
+
+{{/*
+ArgoCD sync-wave annotation. Pass the wave value (a string), e.g.
+  {{- include "finplan.syncWave" .Values.argocd.syncWaves.dependencies | nindent 4 }}
+Ignored by plain Helm, so it is always safe to emit.
+*/}}
+{{- define "finplan.syncWave" -}}
+argocd.argoproj.io/sync-wave: {{ . | quote }}
+{{- end -}}
+
+{{/*
+Annotations that order + manage the migration Job, switched by .Values.migrations.hookMode:
+  * "argocd": an ArgoCD Sync hook at the migration wave. BeforeHookCreation re-runs a fresh
+    Job each sync (sidesteps the immutable Job spec.template error a re-applied Job hits).
+  * "helm":   a Helm post-install/pre-upgrade hook for plain `helm install/upgrade`.
+*/}}
+{{- define "finplan.migrationHookAnnotations" -}}
+{{- if eq .Values.migrations.hookMode "helm" -}}
+helm.sh/hook: post-install,pre-upgrade
+helm.sh/hook-weight: "-5"
+helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+{{- else -}}
+argocd.argoproj.io/hook: Sync
+argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+argocd.argoproj.io/sync-wave: {{ .Values.argocd.syncWaves.migration | quote }}
+{{- end -}}
+{{- end -}}

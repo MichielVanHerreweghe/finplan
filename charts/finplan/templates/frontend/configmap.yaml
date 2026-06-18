@@ -4,6 +4,8 @@ metadata:
   name: {{ include "finplan.frontend.fullname" . }}
   labels:
     {{- include "finplan.frontend.labels" . | nindent 4 }}
+  annotations:
+    {{- include "finplan.syncWave" .Values.argocd.syncWaves.dependencies | nindent 4 }}
 data:
   # Rendered into /config.js at container start (see the frontend Dockerfile entrypoint).
   OIDC_AUTHORITY: {{ required "frontend.oidc.authority is required (e.g. https://<tenant>.auth0.com/)" .Values.frontend.oidc.authority | quote }}
