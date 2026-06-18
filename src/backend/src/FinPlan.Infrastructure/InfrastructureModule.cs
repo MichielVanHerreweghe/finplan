@@ -30,7 +30,14 @@ public static class InfrastructureModule
         string connectionString = configuration.GetConnectionString("Database")
             ?? throw new InvalidOperationException("Missing 'Database' connection string.");
 
-        services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseNpgsql(connectionString, npgsql =>
+                // Pin __EFMigrationsHistory to the 'finplan' schema. HasDefaultSchema("finplan")
+                // moves the entity tables but NOT the history table, which otherwise resolves via
+                // the connection's search_path. If that lands somewhere other than 'finplan', EF
+                // reads an empty history and replays applied migrations — CREATE TABLE then fails
+                // with "relation already exists". Pinning keeps history next to the tables.
+                npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "finplan")));
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
     }
