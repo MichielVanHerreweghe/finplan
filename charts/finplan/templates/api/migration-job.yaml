@@ -7,15 +7,11 @@ metadata:
     {{- include "finplan.labels" . | nindent 4 }}
     app.kubernetes.io/component: migration
   annotations:
-    # post-install: the CNPG cluster + its credentials secret exist by then (fresh install).
-    # pre-upgrade: apply schema changes before the new API rolls out (no multi-replica race).
-    "helm.sh/hook": post-install,pre-upgrade
-    "helm.sh/hook-weight": "-5"
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    # Ordered after the database (wave 0) and before the workloads (wave 2). Under ArgoCD this
+    # is a Sync hook re-created each sync; under Helm it is a post-install/pre-upgrade hook.
+    {{- include "finplan.migrationHookAnnotations" . | nindent 4 }}
 spec:
   backoffLimit: {{ .Values.migrations.backoffLimit }}
-  # Job pods retry until the database is reachable and migrations succeed.
-  ttlSecondsAfterFinished: 600
   template:
     metadata:
       labels:
@@ -31,6 +27,26 @@ spec:
         runAsUser: 1654
         runAsGroup: 1654
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.migrations.waitForDb.enabled }}
+      initContainers:
+        # Block until Postgres accepts TCP connections so `migrate` never starts against an
+        # unreachable DB. Proves the port is open; the DB_HOST/DB_PORT env comes from the CNPG
+        # credentials secret, so this presupposes the secret exists (guaranteed by the wave-0
+        # database gate ahead of this wave-1 Job).
+        - name: wait-for-db
+          image: {{ .Values.migrations.waitForDb.image }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - until nc -z "$DB_HOST" "$DB_PORT"; do echo "waiting for $DB_HOST:$DB_PORT"; sleep 2; done
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          env:
+            {{- include "finplan.db.env" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.migrations.resources | nindent 12 }}
+      {{- end }}
       containers:
         - name: migrate
           image: {{ include "finplan.api.image" . }}

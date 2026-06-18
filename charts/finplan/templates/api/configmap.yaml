@@ -4,6 +4,8 @@ metadata:
   name: {{ include "finplan.api.fullname" . }}
   labels:
     {{- include "finplan.api.labels" . | nindent 4 }}
+  annotations:
+    {{- include "finplan.syncWave" .Values.argocd.syncWaves.dependencies | nindent 4 }}
 data:
   # Non-secret app configuration. The Auth0 client id is public; the connection string is
   # injected separately from the database credentials secret (see the Deployment).

@@ -5,10 +5,11 @@ metadata:
   name: {{ include "finplan.fullname" . }}
   labels:
     {{- include "finplan.labels" . | nindent 4 }}
-  {{- with .Values.httpRoute.annotations }}
   annotations:
+    {{- include "finplan.syncWave" .Values.argocd.syncWaves.workloads | nindent 4 }}
+    {{- with .Values.httpRoute.annotations }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
 spec:
   # Attach to a Gateway managed outside this chart (TLS, listeners, etc. are owned there).
   parentRefs:

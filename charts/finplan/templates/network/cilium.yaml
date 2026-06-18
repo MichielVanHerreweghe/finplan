@@ -10,6 +10,8 @@ metadata:
   name: {{ include "finplan.api.fullname" . }}
   labels:
     {{- include "finplan.api.labels" . | nindent 4 }}
+  annotations:
+    {{- include "finplan.syncWave" .Values.argocd.syncWaves.dependencies | nindent 4 }}
 spec:
   endpointSelector:
     matchLabels:
@@ -70,6 +72,8 @@ metadata:
   name: {{ include "finplan.frontend.fullname" . }}
   labels:
     {{- include "finplan.frontend.labels" . | nindent 4 }}
+  annotations:
+    {{- include "finplan.syncWave" .Values.argocd.syncWaves.dependencies | nindent 4 }}
 spec:
   endpointSelector:
     matchLabels:

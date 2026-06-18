@@ -5,6 +5,8 @@ metadata:
   name: {{ include "finplan.frontend.fullname" . }}
   labels:
     {{- include "finplan.frontend.labels" . | nindent 4 }}
+  annotations:
+    {{- include "finplan.syncWave" .Values.argocd.syncWaves.workloads | nindent 4 }}
 spec:
   minAvailable: {{ .Values.frontend.pdb.minAvailable }}
   selector:
