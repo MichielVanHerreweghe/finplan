@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/MichielVanHerreweghe/finplan/compare/backend-v0.2.0...backend-v0.2.1) (2026-06-18)
+
+
+### Bug Fixes
+
+* migration history missing ([25d988b](https://github.com/MichielVanHerreweghe/finplan/commit/25d988b8ba24ca7547e30bff86b2de7c7d8d8082))
+
 ## [0.2.0](https://github.com/MichielVanHerreweghe/finplan/compare/backend-v0.1.0...backend-v0.2.0) (2026-06-17)
 
 
