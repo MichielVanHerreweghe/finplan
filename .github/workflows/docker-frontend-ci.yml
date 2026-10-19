@@ -39,7 +39,7 @@ jobs:
 
       - name: Lint Dockerfile
         if: steps.check.outputs.present == 'true'
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: src/frontend/Dockerfile
           failure-threshold: error
