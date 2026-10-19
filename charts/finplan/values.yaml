@@ -132,7 +132,7 @@ migrations:
   waitForDb:
     enabled: true
     # -- Image providing `nc` for the TCP wait.
-    image: busybox:1.36
+    image: busybox:1.38
 
   resources:
     requests:
