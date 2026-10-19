@@ -22,7 +22,7 @@ RUN npm run build
 
 # nginx-unprivileged listens on 8080 and runs as uid 101 (non-root) out of the box.
 # 1.30 is the current stable track (even minor); pin to it to stay on a maintained Alpine.
-FROM nginxinc/nginx-unprivileged:1.30-alpine AS final
+FROM nginxinc/nginx-unprivileged:1.31-alpine AS final
 
 # Patch OS packages flagged by the image scanner: even the latest base lags a few
 # days behind Alpine's security releases (notably openssl), so apply the newest
